@@ -1,1 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumis — Skincare that finally sees everyone</title>
+  <meta name="description" content="Built for every skin tone. Powered by intelligent analysis. Guided by dermatologists.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- The hero is one composition: a ring of portraits around a centred message.
+       Everything below lives inside .stage, which is the 1512x982 Figma frame. -->
+  <div class="stage">
+
+    <header class="masthead">
+      <nav class="nav" aria-label="Primary">
+        <a class="nav__logo" href="#">
+          <img class="nav__mark" src="assets/logo-mark.svg" alt="" width="29" height="24">
+          <span class="nav__wordmark">Lumis</span>
+        </a>
+        <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+          <span class="nav__bars" aria-hidden="true"></span>
+          <span class="visually-hidden">Open menu</span>
+        </button>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <p class="chip"><span class="chip__dot" aria-hidden="true"></span>Warmth</p>
+
+      <h1 class="hero__title">Skincare that finally sees everyone.</h1>
+
+      <p class="hero__subtitle">
+        Built for every skin tone. Powered by intelligent analysis. Guided by dermatologists.
+      </p>
+
+      <a class="button" href="#analysis">Get to know your skin</a>
+    </main>
+
+    <!-- Six portraits. In the design they orbit the message; in the DOM they are a
+         plain list, so the reading order stays message-first. -->
+    <ul class="gallery">
+      <li class="gallery__item gallery__item--top-left">
+        <img class="card" src="assets/portrait-1.png" width="209" height="242"
+             alt="Close-up portrait of a young woman with acne and freckles across her cheek.">
+      </li>
+      <li class="gallery__item gallery__item--top-right">
+        <img class="card" src="assets/portrait-2.png" width="209" height="242"
+             alt="Portrait of a young man with redness and breakouts across his cheeks.">
+      </li>
+      <li class="gallery__item gallery__item--right">
+        <img class="card" src="assets/portrait-3.png" width="209" height="242"
+             alt="Portrait of a woman with deep skin tone and long curls, looking at the camera.">
+      </li>
+      <li class="gallery__item gallery__item--left">
+        <img class="card" src="assets/portrait-4.png" width="209" height="242"
+             alt="Portrait of a young person with hyperpigmentation across the cheeks.">
+      </li>
+      <li class="gallery__item gallery__item--bottom-left">
+        <img class="card" src="assets/portrait-5.png" width="209" height="242"
+             alt="Portrait of a woman with vitiligo, one hand resting near her shoulder.">
+      </li>
+      <li class="gallery__item gallery__item--bottom-right">
+        <img class="card" src="assets/portrait-6.png" width="209" height="242"
+             alt="Portrait of a woman with pigmentation across her neck and chest.">
+      </li>
+    </ul>
+
+    <!-- One sentence, four fragments. On desktop each fragment is parked in a corner
+         of the ring; on small screens they close up into the sentence they always were. -->
+    <p class="hint">
+      <span class="hint__part hint__part--top-left">Click on</span>
+      <span class="hint__part hint__part--top-right">cards</span>
+      <span class="hint__part hint__part--bottom-left">to see</span>
+      <span class="hint__part hint__part--bottom-right">their analysis</span>
+    </p>
+
+  </div>
+</body>
+</html>
 
