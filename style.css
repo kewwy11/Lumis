@@ -1,1 +1,349 @@
+/* =============================================================
+   Lumis — hero
+   Design: Figma "MacBook Pro 14" - 1" (node 2144:11612), 1512 x 982.
+
+   Two layouts share one DOM:
+   1. Small screens (default): a plain centred column — nav, message,
+      portrait grid, hint sentence.
+   2. >= 940px: the Figma composition — portraits absolutely positioned
+      in a ring around the message.
+
+   The wide layout scales as one piece. Horizontal offsets are percentages
+   of the 1512px frame, every size is in rem, and the root font size is tied
+   to the viewport width up to 16px. Because both units track the viewport
+   below 1512px, the ring shrinks proportionally and never collides with
+   the message in the middle.
+   ============================================================= */
+
+/* ---------- Design tokens (Figma styles) ---------- */
+:root {
+  --header:        #0f172a;  /* Header      */
+  --grey-400:      #8695aa;  /* grey400     */
+  --blue:          #2563eb;  /* Primaryblue */
+  --blue-dark:     #1d4ed8;  /* PrimaryblueDk */
+  --blue-100:      #dbe6fe;  /* primaryblue100 */
+  --blue-50:       #eff4ff;  /* primaryblue50  */
+  --white:         #ffffff;
+
+  --card-radius:   1.875rem;  /* 30px */
+  --font: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body,
+h1,
+p,
+ul,
+figure { margin: 0; }
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+body {
+  background: var(--white);
+  color: var(--header);
+  font-family: var(--font);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:where(a, button):focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 3px;
+}
+
+/* =============================================================
+   1. Small screens — everything stacks in DOM order
+   ============================================================= */
+
+.stage {
+  width: 100%;
+  max-width: 1512px;
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 3.5rem;
+}
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex;
+  justify-content: center;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;              /* 10px */
+  width: 16.8125rem;          /* 269px */
+  height: 3.5rem;             /* 56px  */
+  padding: 0.3125rem 0.3125rem 0.3125rem 1rem;  /* 5px / 16px left */
+  border-radius: 0.625rem;    /* 10px */
+  background: var(--blue-50);
+}
+
+.nav__logo {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.3125rem;             /* 5px */
+  min-width: 0;
+  text-decoration: none;
+}
+
+.nav__mark {
+  width: 1.8rem;              /* 28.802px */
+  height: 1.5rem;             /* 24.007px */
+  flex-shrink: 0;
+}
+
+.nav__wordmark {
+  color: var(--blue-dark);
+  font-size: 1.3125rem;       /* matches the 65 x 15 wordmark box */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* The menu button: a 48px blue tile holding two 28px rules 10px apart.
+   The bars are one element — the second rule is its ::after. */
+.nav__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;                /* 48px */
+  height: 100%;
+  padding: 0.625rem;          /* 10px */
+  border: 0;
+  border-radius: 0.5rem;      /* 8px */
+  background: var(--blue-dark);
+  cursor: pointer;
+}
+
+.nav__bars,
+.nav__bars::after {
+  display: block;
+  width: 1.75rem;             /* 28px */
+  height: 1px;
+  background: var(--white);
+}
+
+.nav__bars::after {
+  content: "";
+  margin-top: 0.625rem;       /* 10px gap between the rules */
+}
+
+/* ---------- Message ---------- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;                  /* 16px between title and subtitle */
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;                /* 8px */
+  padding: 0.5rem 0.625rem;   /* 8px 10px */
+  border-radius: 3.125rem;    /* 50px */
+  background: var(--blue-100);
+  color: var(--blue);
+  font-size: 0.875rem;        /* 14px */
+  line-height: normal;
+  margin-bottom: 0.25rem;
+}
+
+.chip__dot {
+  width: 0.75rem;             /* 12px */
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.hero__title {
+  max-width: 35.5rem;         /* 568px */
+  color: var(--header);
+  font-size: clamp(2rem, 7.5vw, 3rem);   /* caps at the designed 48px */
+  font-weight: 600;
+  line-height: 1.2083;        /* 58 / 48 */
+  letter-spacing: -0.01em;    /* -0.48px at 48px */
+  text-wrap: balance;         /* holds the designed two-line break */
+}
+
+.hero__subtitle {
+  max-width: 29.25rem;        /* 468px */
+  color: var(--grey-400);
+  font-size: 1.125rem;        /* 18px */
+  line-height: normal;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15.25rem;            /* 244px */
+  padding: 1.5rem 1.25rem;    /* 24px 20px */
+  margin-top: 0.25rem;        /* grows to 20px in the wide layout */
+  border-radius: 3.125rem;    /* 50px */
+  background: var(--blue-dark);
+  color: var(--white);
+  font-size: 1rem;            /* 16px */
+  text-align: center;
+  text-decoration: none;
+}
+
+/* ---------- Portraits ---------- */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.card {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 209 / 242;    /* the designed card proportion */
+  object-fit: cover;
+  border-radius: var(--card-radius);
+  background: var(--blue-50); /* holds the shape while the photo loads */
+}
+
+/* ---------- Hint ---------- */
+.hint {
+  margin-top: 2rem;
+  color: var(--blue-dark);
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.hint__part + .hint__part::before {
+  content: " ";
+}
+
+/* =============================================================
+   2. Wide screens — the Figma ring
+   ============================================================= */
+
+@media (min-width: 940px) {
+
+  /* 1.0582vw == 16px at the 1512px frame width. Below that the whole
+     composition scales down with the viewport; above it, it locks. */
+  html { font-size: clamp(10px, 1.0582vw, 16px); }
+
+  .stage {
+    position: relative;
+    height: 61.375rem;        /* 982px */
+    padding: 0;
+  }
+
+  /* Absolute boxes. Vertical offsets are rem (they scale with the root
+     font size); horizontal offsets are percentages of the 1512px frame. */
+  .masthead,
+  .gallery__item,
+  .hero,
+  .hint__part {
+    position: absolute;
+  }
+
+  .masthead {
+    top: 4rem;                /* y 64  */
+    left: 41.0714%;           /* x 621 */
+    display: block;
+  }
+
+  /* ---------- Message block: x 472, y 361, 568 wide ---------- */
+  .hero {
+    top: 22.5625rem;          /* y 361 */
+    left: 31.2169%;           /* x 472 */
+    width: 35.5rem;           /* 568px */
+    gap: 1rem;
+    margin-top: 0;
+  }
+
+  .chip {
+    /* y 316 — 45px above the message block, centred on the frame */
+    position: absolute;
+    top: -2.8125rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
+  }
+
+  .hero__title {
+    width: 100%;
+    max-width: none;
+    font-size: 3rem;          /* 48px */
+    line-height: 3.625rem;    /* 58px */
+  }
+
+  .button { margin-top: 0.25rem; }  /* 16px stack gap + 4px == the 20px in the design */
+
+  /* ---------- The six portraits ---------- */
+  .gallery {
+    display: block;
+    margin-top: 0;
+  }
+
+  .gallery__item {
+    width: 13.0625rem;        /* 209px */
+    height: 15.125rem;        /* 242px */
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .gallery__item--top-left     { top: 4rem;        left: 20.3042%; }  /* 307, 64  */
+  .gallery__item--top-right    { top: 4rem;        left: 65.8069%; }  /* 995, 64  */
+  .gallery__item--left         { top: 23.3125rem;  left: 5.2910%;  }  /*  80, 373 */
+  .gallery__item--right        { top: 23.3125rem;  left: 80.8862%; }  /* 1223, 373 */
+  .gallery__item--bottom-left  { top: 43.1875rem;  left: 20.3042%; }  /* 307, 691 */
+  .gallery__item--bottom-right { top: 43.1875rem;  left: 65.8069%; }  /* 995, 691 */
+
+  /* ---------- Hint fragments, parked in the four corners ---------- */
+  .hint {
+    margin-top: 0;
+    font-size: 1.25rem;       /* 20px */
+  }
+
+  .hint__part {
+    transform: translateY(-50%);
+    white-space: nowrap;
+  }
+
+  .hint__part + .hint__part::before { content: none; }
+
+  .hint__part--top-left     { top: 11.53125rem; left: 8.0026%;  }  /*  121, 177 */
+  .hint__part--top-right    { top: 11.53125rem; left: 86.5079%; }  /* 1308, 177 */
+  .hint__part--bottom-left  { top: 51.21875rem; left: 8.6640%;  }  /*  131, 812 */
+  .hint__part--bottom-right { top: 51.21875rem; left: 84.0608%; }  /* 1271, 812 */
+}
 
