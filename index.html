@@ -20,8 +20,7 @@
     <header class="masthead">
       <nav class="nav" aria-label="Primary">
         <a class="nav__logo" href="#">
-          <img class="nav__mark" src="assets/logo-mark.svg" alt="" width="29" height="24">
-          <span class="nav__wordmark">Lumis</span>
+          <img class="nav__mark" src="icons/lumislogo.svg" alt="Lumis" width="99" height="24">
         </a>
         <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="site-menu">
           <span class="nav__bars" aria-hidden="true"></span>
@@ -39,46 +38,46 @@
         Built for every skin tone. Powered by intelligent analysis. Guided by dermatologists.
       </p>
 
-      <a class="button" href="#analysis">Get to know your skin</a>
+      <div class="hero__actions">
+        <a class="button button--primary" href="#">
+          <img class="button__icon" src="icons/appstorelogo.svg" alt="" width="24" height="24">
+          Download for IOS
+        </a>
+        <a class="button button--secondary" href="#">
+          <img class="button__icon" src="icons/playstorelogo.svg" alt="" width="24" height="24">
+          Download for Andriod
+        </a>
+      </div>
     </main>
 
     <!-- Six portraits. In the design they orbit the message; in the DOM they are a
          plain list, so the reading order stays message-first. -->
     <ul class="gallery">
       <li class="gallery__item gallery__item--top-left">
-        <img class="card" src="assets/portrait-1.png" width="209" height="242"
+        <img class="card" src="images/woman_topleft.png" width="209" height="242"
              alt="Close-up portrait of a young woman with acne and freckles across her cheek.">
       </li>
       <li class="gallery__item gallery__item--top-right">
-        <img class="card" src="assets/portrait-2.png" width="209" height="242"
+        <img class="card" src="images/man_topright.png" width="209" height="242"
              alt="Portrait of a young man with redness and breakouts across his cheeks.">
       </li>
       <li class="gallery__item gallery__item--right">
-        <img class="card" src="assets/portrait-3.png" width="209" height="242"
+        <img class="card" src="images/woman_middleright.png" width="209" height="242"
              alt="Portrait of a woman with deep skin tone and long curls, looking at the camera.">
       </li>
       <li class="gallery__item gallery__item--left">
-        <img class="card" src="assets/portrait-4.png" width="209" height="242"
+        <img class="card" src="images/woman_middleleft.png" width="209" height="242"
              alt="Portrait of a young person with hyperpigmentation across the cheeks.">
       </li>
       <li class="gallery__item gallery__item--bottom-left">
-        <img class="card" src="assets/portrait-5.png" width="209" height="242"
+        <img class="card" src="images/woman_bottomleft.png" width="209" height="242"
              alt="Portrait of a woman with vitiligo, one hand resting near her shoulder.">
       </li>
       <li class="gallery__item gallery__item--bottom-right">
-        <img class="card" src="assets/portrait-6.png" width="209" height="242"
+        <img class="card" src="images/woman_bottomright.png" width="209" height="242"
              alt="Portrait of a woman with pigmentation across her neck and chest.">
       </li>
     </ul>
-
-    <!-- One sentence, four fragments. On desktop each fragment is parked in a corner
-         of the ring; on small screens they close up into the sentence they always were. -->
-    <p class="hint">
-      <span class="hint__part hint__part--top-left">Click on</span>
-      <span class="hint__part hint__part--top-right">cards</span>
-      <span class="hint__part hint__part--bottom-left">to see</span>
-      <span class="hint__part hint__part--bottom-right">their analysis</span>
-    </p>
 
   </div>
 </body>

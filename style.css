@@ -4,7 +4,7 @@
 
    Two layouts share one DOM:
    1. Small screens (default): a plain centred column — nav, message,
-      portrait grid, hint sentence.
+      portrait grid.
    2. >= 940px: the Figma composition — portraits absolutely positioned
       in a ring around the message.
 
@@ -106,23 +106,14 @@ body {
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 0.3125rem;             /* 5px */
   min-width: 0;
   text-decoration: none;
 }
 
 .nav__mark {
-  width: 1.8rem;              /* 28.802px */
+  width: 6.1875rem;           /* 99px */
   height: 1.5rem;             /* 24.007px */
   flex-shrink: 0;
-}
-
-.nav__wordmark {
-  color: var(--blue-dark);
-  font-size: 1.3125rem;       /* matches the 65 x 15 wordmark box */
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1;
 }
 
 /* The menu button: a 48px blue tile holding two 28px rules 10px apart.
@@ -137,7 +128,7 @@ body {
   padding: 0.625rem;          /* 10px */
   border: 0;
   border-radius: 0.5rem;      /* 8px */
-  background: var(--blue-dark);
+  background: var(--blue);
   cursor: pointer;
 }
 
@@ -174,7 +165,6 @@ body {
   color: var(--blue);
   font-size: 0.875rem;        /* 14px */
   line-height: normal;
-  margin-bottom: 0.25rem;
 }
 
 .chip__dot {
@@ -201,19 +191,42 @@ body {
   line-height: normal;
 }
 
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;                  /* 16px */
+  margin-top: 0.25rem;        /* grows the 16px stack gap to 20px */
+}
+
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15.25rem;            /* 244px */
+  gap: 0.625rem;              /* 10px */
+  height: 4.125rem;           /* 66px */
   padding: 1.5rem 1.25rem;    /* 24px 20px */
-  margin-top: 0.25rem;        /* grows to 20px in the wide layout */
   border-radius: 3.125rem;    /* 50px */
-  background: var(--blue-dark);
-  color: var(--white);
-  font-size: 1rem;            /* 16px */
+  font-size: 0.875rem;        /* 14px */
   text-align: center;
   text-decoration: none;
+  white-space: nowrap;
+}
+
+.button__icon {
+  width: 1.5rem;              /* 24px */
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.button--primary {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.button--secondary {
+  border: 1px solid var(--blue);
+  color: var(--blue);
 }
 
 /* ---------- Portraits ---------- */
@@ -231,19 +244,6 @@ body {
   object-fit: cover;
   border-radius: var(--card-radius);
   background: var(--blue-50); /* holds the shape while the photo loads */
-}
-
-/* ---------- Hint ---------- */
-.hint {
-  margin-top: 2rem;
-  color: var(--blue-dark);
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-  text-align: center;
-}
-
-.hint__part + .hint__part::before {
-  content: " ";
 }
 
 /* =============================================================
@@ -266,33 +266,25 @@ body {
      font size); horizontal offsets are percentages of the 1512px frame. */
   .masthead,
   .gallery__item,
-  .hero,
-  .hint__part {
+  .hero {
     position: absolute;
   }
 
   .masthead {
     top: 4rem;                /* y 64  */
-    left: 41.0714%;           /* x 621 */
+    left: 50%;
+    transform: translateX(-50%);
     display: block;
   }
 
-  /* ---------- Message block: x 472, y 361, 568 wide ---------- */
+  /* ---------- Message block: x 471.5, centred vertically, 568 wide ---------- */
   .hero {
-    top: 22.5625rem;          /* y 361 */
-    left: 31.2169%;           /* x 472 */
+    top: 50%;
+    left: 31.1838%;           /* x 471.5 */
+    transform: translateY(-50%);
     width: 35.5rem;           /* 568px */
     gap: 1rem;
     margin-top: 0;
-  }
-
-  .chip {
-    /* y 316 — 45px above the message block, centred on the frame */
-    position: absolute;
-    top: -2.8125rem;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 0;
   }
 
   .hero__title {
@@ -301,8 +293,6 @@ body {
     font-size: 3rem;          /* 48px */
     line-height: 3.625rem;    /* 58px */
   }
-
-  .button { margin-top: 0.25rem; }  /* 16px stack gap + 4px == the 20px in the design */
 
   /* ---------- The six portraits ---------- */
   .gallery {
@@ -327,23 +317,5 @@ body {
   .gallery__item--right        { top: 23.3125rem;  left: 80.8862%; }  /* 1223, 373 */
   .gallery__item--bottom-left  { top: 43.1875rem;  left: 20.3042%; }  /* 307, 691 */
   .gallery__item--bottom-right { top: 43.1875rem;  left: 65.8069%; }  /* 995, 691 */
-
-  /* ---------- Hint fragments, parked in the four corners ---------- */
-  .hint {
-    margin-top: 0;
-    font-size: 1.25rem;       /* 20px */
-  }
-
-  .hint__part {
-    transform: translateY(-50%);
-    white-space: nowrap;
-  }
-
-  .hint__part + .hint__part::before { content: none; }
-
-  .hint__part--top-left     { top: 11.53125rem; left: 8.0026%;  }  /*  121, 177 */
-  .hint__part--top-right    { top: 11.53125rem; left: 86.5079%; }  /* 1308, 177 */
-  .hint__part--bottom-left  { top: 51.21875rem; left: 8.6640%;  }  /*  131, 812 */
-  .hint__part--bottom-right { top: 51.21875rem; left: 84.0608%; }  /* 1271, 812 */
 }
 
