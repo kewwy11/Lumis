@@ -116,8 +116,7 @@ body {
   flex-shrink: 0;
 }
 
-/* The menu button: a 48px blue tile holding two 28px rules 10px apart.
-   The bars are one element — the second rule is its ::after. */
+/* The menu button: a 48px blue tile holding two 28px rules 10px apart. */
 .nav__toggle {
   display: flex;
   align-items: center;
@@ -132,18 +131,25 @@ body {
   cursor: pointer;
 }
 
-.nav__bars,
-.nav__bars::after {
+.nav__bars {
+  position: relative;
   display: block;
   width: 1.75rem;             /* 28px */
+  height: 0.75rem;            /* 12px: spans both rules, so the pair centers as one unit */
+}
+
+.nav__bars::before,
+.nav__bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
   height: 1px;
   background: var(--white);
 }
 
-.nav__bars::after {
-  content: "";
-  margin-top: 0.625rem;       /* 10px gap between the rules */
-}
+.nav__bars::before { top: 0; }
+.nav__bars::after { bottom: 0; }  /* 10px below ::before, since the box is 12px tall */
 
 /* ---------- Message ---------- */
 .hero {
