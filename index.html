@@ -30,7 +30,11 @@
     </header>
 
     <main class="hero">
-      <p class="chip"><span class="chip__dot" aria-hidden="true"></span>Warmth</p>
+      <p class="chip" data-theme="warmth">
+        <span class="chip__dot" aria-hidden="true"></span>
+        <span class="chip__viewport" aria-hidden="true"><span class="chip__word"></span></span>
+        <span class="visually-hidden">Warmth</span>
+      </p>
 
       <h1 class="hero__title">Skincare that finally sees everyone.</h1>
 
@@ -41,11 +45,21 @@
       <div class="hero__actions">
         <a class="button button--primary" href="#">
           <img class="button__icon" src="icons/appstorelogo.svg" alt="" width="24" height="24">
-          Download for IOS
+          <span class="button__label">
+            <span class="button__label-track">
+              <span class="button__label-text">Download for iOS</span>
+              <span class="button__label-text" aria-hidden="true">Download for iOS</span>
+            </span>
+          </span>
         </a>
         <a class="button button--secondary" href="#">
           <img class="button__icon" src="icons/playstorelogo.svg" alt="" width="24" height="24">
-          Download for Andriod
+          <span class="button__label">
+            <span class="button__label-track">
+              <span class="button__label-text">Download for Andriod</span>
+              <span class="button__label-text" aria-hidden="true">Download for Andriod</span>
+            </span>
+          </span>
         </a>
       </div>
     </main>
@@ -54,32 +68,238 @@
          plain list, so the reading order stays message-first. -->
     <ul class="gallery">
       <li class="gallery__item gallery__item--top-left">
-        <img class="card" src="images/woman_topleft.png" width="209" height="242"
-             alt="Close-up portrait of a young woman with acne and freckles across her cheek.">
+        <div class="portrait">
+          <img class="card" src="images/woman_topleft.png" width="209" height="242"
+               alt="Close-up portrait of a young woman with acne and freckles across her cheek.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 32.6%; --my: 45%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 26.8%; --my: 58%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 38.4%; --my: 78%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot" style="background: #f3e7db;"></span>
+              <span class="mst-dot" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot" style="background: #6f4e33;"></span>
+              <span class="mst-dot" style="background: #543a26;"></span>
+              <span class="mst-dot" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Acne</p>
+            <p class="portrait-card__confidence"><strong>91%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </li>
       <li class="gallery__item gallery__item--top-right">
-        <img class="card" src="images/man_topright.png" width="209" height="242"
-             alt="Portrait of a young man with redness and breakouts across his cheeks.">
-      </li>
-      <li class="gallery__item gallery__item--right">
-        <img class="card" src="images/woman_middleright.png" width="209" height="242"
-             alt="Portrait of a woman with deep skin tone and long curls, looking at the camera.">
+        <div class="portrait">
+          <img class="card" src="images/man_topright.png" width="209" height="242"
+               alt="Portrait of a young man with redness and breakouts across his cheeks.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 61.6%; --my: 30%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 73.1%; --my: 50%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 61.6%; --my: 68%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #f3e7db;"></span>
+              <span class="mst-dot" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot" style="background: #6f4e33;"></span>
+              <span class="mst-dot" style="background: #543a26;"></span>
+              <span class="mst-dot" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Redness</p>
+            <p class="portrait-card__confidence"><strong>88%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </li>
       <li class="gallery__item gallery__item--left">
-        <img class="card" src="images/woman_middleleft.png" width="209" height="242"
-             alt="Portrait of a young person with hyperpigmentation across the cheeks.">
+        <div class="portrait">
+          <img class="card" src="images/woman_middleleft.png" width="209" height="242"
+               alt="Portrait of a young person with hyperpigmentation across the cheeks.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 57.2%; --my: 20%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 42.8%; --my: 48%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 61.6%; --my: 70%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot" style="background: #f3e7db;"></span>
+              <span class="mst-dot" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #6f4e33;"></span>
+              <span class="mst-dot" style="background: #543a26;"></span>
+              <span class="mst-dot" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Hyperpigmentation</p>
+            <p class="portrait-card__confidence"><strong>93%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </li>
+      <li class="gallery__item gallery__item--right">
+        <div class="portrait">
+          <img class="card" src="images/woman_middleright.png" width="209" height="242"
+               alt="Portrait of a woman with deep skin tone and long curls, looking at the camera.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 42%; --my: 15.5%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 48%; --my: 28.4%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 45%; --my: 39.2%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot" style="background: #f3e7db;"></span>
+              <span class="mst-dot" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot" style="background: #6f4e33;"></span>
+              <span class="mst-dot" style="background: #543a26;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Even Tone</p>
+            <p class="portrait-card__confidence"><strong>96%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </li>
       <li class="gallery__item gallery__item--bottom-left">
-        <img class="card" src="images/woman_bottomleft.png" width="209" height="242"
-             alt="Portrait of a woman with vitiligo, one hand resting near her shoulder.">
+        <div class="portrait">
+          <img class="card" src="images/woman_bottomleft.png" width="209" height="242"
+               alt="Portrait of a woman with vitiligo, one hand resting near her shoulder.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 61.6%; --my: 28%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 47.1%; --my: 50%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 64.4%; --my: 72%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot" style="background: #f3e7db;"></span>
+              <span class="mst-dot" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot" style="background: #6f4e33;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #543a26;"></span>
+              <span class="mst-dot" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Vitiligo</p>
+            <p class="portrait-card__confidence"><strong>94%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </li>
       <li class="gallery__item gallery__item--bottom-right">
-        <img class="card" src="images/woman_bottomright.png" width="209" height="242"
-             alt="Portrait of a woman with pigmentation across her neck and chest.">
+        <div class="portrait">
+          <img class="card" src="images/woman_bottomright.png" width="209" height="242"
+               alt="Portrait of a woman with pigmentation across her neck and chest.">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 52.9%; --my: 15%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 50.1%; --my: 40%;" aria-hidden="true"></span>
+          <span class="scan-marker" style="--mx: 57.1%; --my: 68%;" aria-hidden="true"></span>
+        </div>
+        <div class="portrait-card" aria-hidden="true">
+          <div class="portrait-card__mst">
+            <p class="portrait-card__label">MST scale</p>
+            <div class="mst-scale">
+              <span class="mst-dot" style="background: #f6ede4;"></span>
+              <span class="mst-dot" style="background: #f3e7db;"></span>
+              <span class="mst-dot mst-dot--active" style="background: #f7ead0;"></span>
+              <span class="mst-dot" style="background: #eadaba;"></span>
+              <span class="mst-dot" style="background: #d7bd96;"></span>
+              <span class="mst-dot" style="background: #a07e56;"></span>
+              <span class="mst-dot" style="background: #8d6a47;"></span>
+              <span class="mst-dot" style="background: #6f4e33;"></span>
+              <span class="mst-dot" style="background: #543a26;"></span>
+              <span class="mst-dot" style="background: #3b2718;"></span>
+            </div>
+          </div>
+          <div class="portrait-card__condition-group">
+            <p class="portrait-card__label">Detected Condition</p>
+            <p class="portrait-card__condition">Pigmentation</p>
+            <p class="portrait-card__confidence"><strong>90%</strong> confidence</p>
+          </div>
+          <a class="portrait-card__link" href="#">
+            View analysis
+            <svg class="portrait-card__chevron" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
+              <path d="M5.5 3.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
       </li>
     </ul>
 
   </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
 
