@@ -299,6 +299,98 @@
 
   </div>
 
+  <!-- Second hero state: a full-screen expansion of whichever portrait was
+       clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662). -->
+  <section class="hero2" id="hero2" hidden>
+    <img class="hero2__bg" id="hero2Bg" src="" alt="">
+    <div class="hero2__scrim" aria-hidden="true"></div>
+
+    <div class="hero2__frame">
+      <header class="hero2__nav">
+        <span class="hero2__logo">
+          <img src="icons/lumislogo-white.svg" alt="Lumis" width="99" height="24">
+        </span>
+        <button class="hero2__close" type="button" id="hero2Close" aria-label="Close analysis view">
+          <img src="icons/close.svg" alt="" width="28" height="28">
+        </button>
+      </header>
+
+      <a class="hero2__cta" href="#">Get started</a>
+
+      <div class="hero2__severity" aria-hidden="true">
+        <span class="hero2__severity-bar hero2__severity-bar--active"></span>
+        <span class="hero2__severity-bar"></span>
+        <span class="hero2__severity-bar"></span>
+        <span class="hero2__severity-bar"></span>
+        <span class="hero2__severity-bar"></span>
+        <span class="hero2__severity-bar"></span>
+      </div>
+
+      <div class="hero2__marker" id="hero2Marker0">
+        <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker1">
+        <span class="hero2__marker-label" id="hero2MarkerLabel1"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker2">
+        <span class="hero2__marker-label" id="hero2MarkerLabel2"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+
+      <div class="hero2__footer">
+        <div class="hero2__dropdown" id="hero2NameDropdown">
+          <button class="hero2__pill hero2__pill--dropdown" id="hero2NamePill" type="button" aria-expanded="false" aria-controls="hero2NamePanel">
+            <span id="hero2Name"></span>
+            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
+          </button>
+          <div class="hero2__name-panel" id="hero2NamePanel" hidden>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Age</p>
+              <p class="hero2__name-value" id="hero2Age"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Dominant Condition</p>
+              <p class="hero2__name-value" id="hero2Dominant"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Confidence</p>
+              <p class="hero2__name-value" id="hero2Confidence"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Other Conditions</p>
+              <p class="hero2__name-value" id="hero2Other"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero2__dropdown" id="hero2SkinDropdown">
+          <button class="hero2__pill hero2__pill--dropdown" id="hero2SkinTypePill" type="button" aria-expanded="false" aria-controls="hero2SkinPanel">
+            <span id="hero2SkinType"></span>
+            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
+          </button>
+          <ul class="hero2__skin-panel" id="hero2SkinPanel" hidden>
+            <li><button type="button" data-value="Olive skin">Olive skin</button></li>
+            <li><button type="button" data-value="Deep brown skin">Deep brown skin</button></li>
+            <li><button type="button" data-value="Milky white skin">Milky white skin</button></li>
+            <li><button type="button" data-value="Bronze skin">Bronze skin</button></li>
+            <li><button type="button" data-value="Dark Skin">Dark Skin</button></li>
+            <li><button type="button" data-value="Black Skin">Black Skin</button></li>
+          </ul>
+        </div>
+
+        <p class="hero2__stat" id="hero2Stat">
+          <span class="hero2__stat-name" id="hero2StatName"></span>
+          <span class="hero2__stat-value" id="hero2StatValue"></span>
+        </p>
+      </div>
+    </div>
+  </section>
+
   <script src="script.js"></script>
 </body>
 </html>

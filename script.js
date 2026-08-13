@@ -274,3 +274,229 @@
 
   setInterval(rotate, ROTATE_INTERVAL);
 })();
+
+/* =============================================================
+   Second hero state
+   Clicking any portrait expands it into a full-screen analysis view
+   (Figma "hero2", node 2144:11662), populated from the data below.
+   Closes on the X button, the scrim, or Escape.
+   ============================================================= */
+
+(function () {
+  const hero2 = document.getElementById("hero2");
+  if (!hero2) return;
+
+  const bg = document.getElementById("hero2Bg");
+  const nameEl = document.getElementById("hero2Name");
+  const skinTypeEl = document.getElementById("hero2SkinType");
+  const statNameEl = document.getElementById("hero2StatName");
+  const statValueEl = document.getElementById("hero2StatValue");
+  const ageEl = document.getElementById("hero2Age");
+  const dominantEl = document.getElementById("hero2Dominant");
+  const confidenceEl = document.getElementById("hero2Confidence");
+  const otherEl = document.getElementById("hero2Other");
+  const markerEls = [0, 1, 2].map((i) => ({
+    root: document.getElementById(`hero2Marker${i}`),
+    label: document.getElementById(`hero2MarkerLabel${i}`),
+  }));
+
+  // Each portrait's already-established condition (from its hover card)
+  // is the featured marker/stat; the other two extend that same finding
+  // across nearby facial areas. Marker positions are plain px within the
+  // fixed 1512x982 frame (see the wide-screen media query), tuned per
+  // photo's crop. skinType uses Figma's own fixed option vocabulary
+  // (node 2144:11662's skin-type dropdown, "Frame 1010/Variant2").
+  const PORTRAITS = {
+    "top-left": {
+      image: "images/woman_topleft.png",
+      name: "Deborah Clark",
+      age: "29 years old",
+      skinType: "Olive skin",
+      confidence: "98%",
+      otherConditions: "HPI, dryness.....",
+      objectPosition: "50% 42%",
+      markers: [
+        { label: "Acne Vulgaris", severity: "87% Severe", mx: "49.7%", my: "652px" },
+        { label: "Hyper-pigmentation", mx: "26.5%", my: "430px" },
+        { label: "Red Rashes", mx: "80.2%", my: "526px" },
+      ],
+    },
+    "top-right": {
+      image: "images/man_topright.png",
+      name: "Marcus Webb",
+      age: "22 years old",
+      skinType: "Milky white skin",
+      confidence: "90%",
+      otherConditions: "Enlarged pores, oiliness",
+      objectPosition: "50% 26%",
+      markers: [
+        { label: "Redness", severity: "88% Moderate", mx: "36%", my: "580px" },
+        { label: "Acne Vulgaris", mx: "65%", my: "560px" },
+        { label: "Enlarged Pores", mx: "51%", my: "615px" },
+      ],
+    },
+    "left": {
+      image: "images/woman_middleleft.png",
+      name: "Aisha Bello",
+      age: "26 years old",
+      skinType: "Deep brown skin",
+      confidence: "95%",
+      otherConditions: "Freckles, dark spots",
+      objectPosition: "50% 30%",
+      markers: [
+        { label: "Hyperpigmentation", severity: "93% Severe", mx: "30%", my: "506px" },
+        { label: "Freckles", mx: "34%", my: "260px" },
+        { label: "Dark Spots", mx: "28%", my: "753px" },
+      ],
+    },
+    "right": {
+      image: "images/woman_middleright.png",
+      name: "Naledi Okafor",
+      age: "24 years old",
+      skinType: "Black Skin",
+      confidence: "97%",
+      otherConditions: "Smooth texture",
+      objectPosition: "50% 22%",
+      markers: [
+        { label: "Even Tone", severity: "96% Balanced", mx: "48%", my: "440px" },
+        { label: "Smooth Texture", mx: "35%", my: "320px" },
+        { label: "Balanced Hydration", mx: "60%", my: "544px" },
+      ],
+    },
+    "bottom-left": {
+      image: "images/woman_bottomleft.png",
+      name: "Simone Carter",
+      age: "31 years old",
+      skinType: "Dark Skin",
+      confidence: "96%",
+      otherConditions: "Dry patches, sun sensitivity",
+      objectPosition: "50% 20%",
+      markers: [
+        { label: "Vitiligo", severity: "94% Widespread", mx: "55%", my: "245px" },
+        { label: "Dry Patches", mx: "39%", my: "405px" },
+        { label: "Sun Sensitivity", mx: "70%", my: "636px" },
+      ],
+    },
+    "bottom-right": {
+      image: "images/woman_bottomright.png",
+      name: "Mei Tanaka",
+      age: "27 years old",
+      skinType: "Bronze skin",
+      confidence: "93%",
+      otherConditions: "Uneven tone, sun damage",
+      objectPosition: "50% 60%",
+      markers: [
+        { label: "Pigmentation", severity: "90% Moderate", mx: "54%", my: "550px" },
+        { label: "Uneven Tone", mx: "42%", my: "795px" },
+        { label: "Sun Damage", mx: "66%", my: "579px" },
+      ],
+    },
+  };
+
+  const POSITION_CLASSES = Object.keys(PORTRAITS);
+
+  function positionKeyFor(item) {
+    return POSITION_CLASSES.find((key) => item.classList.contains(`gallery__item--${key}`));
+  }
+
+  function populate(data) {
+    bg.src = data.image;
+    bg.style.objectPosition = data.objectPosition || "50% 50%";
+    nameEl.textContent = data.name;
+    skinTypeEl.textContent = data.skinType;
+    ageEl.textContent = data.age;
+    confidenceEl.textContent = data.confidence;
+    otherEl.textContent = data.otherConditions;
+
+    const [primary, ...rest] = data.markers;
+    statNameEl.textContent = `${primary.label}:`;
+    statValueEl.textContent = ` ${primary.severity}`;
+    dominantEl.textContent = primary.label;
+
+    [primary, ...rest].forEach((marker, i) => {
+      const { root, label } = markerEls[i];
+      root.style.setProperty("--mx", marker.mx);
+      root.style.setProperty("--my", marker.my);
+      label.textContent = marker.label;
+    });
+  }
+
+  /* ---------- Dropdowns ---------- */
+  const namePill = document.getElementById("hero2NamePill");
+  const namePanel = document.getElementById("hero2NamePanel");
+  const skinPill = document.getElementById("hero2SkinTypePill");
+  const skinPanel = document.getElementById("hero2SkinPanel");
+  const dropdowns = [
+    { pill: namePill, panel: namePanel },
+    { pill: skinPill, panel: skinPanel },
+  ];
+
+  function closeDropdowns() {
+    dropdowns.forEach(({ pill, panel }) => {
+      panel.hidden = true;
+      pill.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  function anyDropdownOpen() {
+    return dropdowns.some(({ panel }) => !panel.hidden);
+  }
+
+  dropdowns.forEach(({ pill, panel }) => {
+    pill.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = !panel.hidden;
+      closeDropdowns();
+      if (!isOpen) {
+        panel.hidden = false;
+        pill.setAttribute("aria-expanded", "true");
+      }
+    });
+  });
+
+  skinPanel.querySelectorAll("button[data-value]").forEach((option) => {
+    option.addEventListener("click", () => {
+      skinTypeEl.textContent = option.dataset.value;
+      closeDropdowns();
+    });
+  });
+
+  hero2.addEventListener("click", (event) => {
+    if (!event.target.closest(".hero2__dropdown")) closeDropdowns();
+  });
+
+  function open(item) {
+    const key = positionKeyFor(item);
+    const data = PORTRAITS[key];
+    if (!data) return;
+
+    populate(data);
+    closeDropdowns();
+    hero2.hidden = false;
+    document.body.style.overflow = "hidden";
+    closeButton.focus();
+  }
+
+  function close() {
+    hero2.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  document.querySelectorAll(".gallery__item").forEach((item) => {
+    const trigger = item.querySelector(".card");
+    if (!trigger) return;
+    trigger.addEventListener("click", () => open(item));
+  });
+
+  const closeButton = document.getElementById("hero2Close");
+  closeButton.addEventListener("click", close);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || hero2.hidden) return;
+    if (anyDropdownOpen()) {
+      closeDropdowns();
+    } else {
+      close();
+    }
+  });
+})();

@@ -543,6 +543,280 @@ body {
   .portrait-card { transition: none; }
 }
 
+.card { cursor: pointer; }
+
+/* =============================================================
+   Second hero state — a full-screen expansion of whichever portrait
+   was clicked. Figma "hero2" (node 2144:11662). Below, a simple
+   stacked fallback; the precise Figma layout is in the wide-screen
+   media query further down.
+   ============================================================= */
+
+.hero2[hidden] { display: none; }
+
+.hero2 {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;   /* nothing ever scrolls — the wide layout scales to fit instead */
+  background: var(--header);
+}
+
+.hero2__bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132%;              /* zoomed out ~1/1.32: fills the same edges, but shows more of the face,
+                                so annotations can sit precisely over each detected area, per Figma. */
+  height: 132%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.hero2__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.4) 0%,
+    rgba(15, 23, 42, 0.05) 18%,
+    rgba(15, 23, 42, 0.05) 65%,
+    rgba(15, 23, 42, 0.5) 100%
+  );
+}
+
+.hero2__frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem 1.25rem;
+  gap: 1.5rem;
+}
+
+.hero2__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.hero2__logo {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  height: 3.5rem;
+  padding-left: 1rem;
+  border-radius: 0.625rem;
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.hero2__logo img {
+  width: 6.1875rem;    /* 99px */
+  height: 1.5rem;
+}
+
+.hero2__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.875rem;      /* 46px */
+  height: 2.875rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--white);
+  cursor: pointer;
+}
+
+.hero2__cta {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.5rem;         /* 56px */
+  padding: 0 1.25rem;
+  border-radius: 3.125rem;
+  background: var(--white);
+  color: var(--blue-dark);
+  font-size: 1rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Decorative-only on small screens: a precise face annotation layer
+   doesn't translate well to arbitrary mobile widths, so it's kept for
+   the wide, Figma-precise layout only. */
+.hero2__severity,
+.hero2__marker {
+  display: none;
+}
+
+.hero2__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hero2__dropdown {
+  position: relative;
+}
+
+.hero2__pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 0.3125rem 0 1rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: rgba(15, 23, 42, 0.3);
+  color: var(--white);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.hero2__pill img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.hero2__chevron img {
+  transition: transform 0.2s ease;
+}
+
+.hero2__pill[aria-expanded="true"] .hero2__chevron img {
+  transform: rotate(180deg);
+}
+
+/* ---------- Dropdown panels ---------- */
+.hero2__name-panel {
+  margin-top: 0.625rem;
+  padding: 1rem 1rem 0.625rem;
+  border-radius: 0.625rem;
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.hero2__name-row { padding-bottom: 1rem; }
+.hero2__name-row:last-child { padding-bottom: 0; }
+
+.hero2__name-label {
+  margin: 0 0 0.625rem;
+  color: var(--border);
+  font-size: 0.875rem;
+  font-weight: 300;
+}
+
+.hero2__name-value {
+  margin: 0;
+  color: var(--white);
+  font-size: 1rem;
+}
+
+.hero2__skin-panel {
+  margin: 0.625rem 0 0;
+  padding: 0.3125rem;
+  list-style: none;
+  border-radius: 0.625rem;
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.hero2__skin-panel button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 0.625rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: none;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hero2__skin-panel button:hover,
+.hero2__skin-panel button:focus-visible {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.hero2__stat {
+  display: flex;
+  align-items: center;
+  height: 3.5rem;
+  padding: 0 0.3125rem 0 1rem;
+  border-radius: 0.625rem;
+  background: rgba(15, 23, 42, 0.3);
+  color: var(--white);
+  font-size: 1rem;
+}
+
+.hero2__stat-name { font-weight: 300; }
+.hero2__stat-value { font-weight: 400; }
+
+/* ---------- Face annotation markers (wide layout only) ---------- */
+.hero2__marker {
+  position: absolute;
+  left: var(--mx);
+  top: var(--my);
+  width: 4.125rem;        /* 66px */
+  height: 4.125rem;
+  transform: translate(-50%, -50%);
+}
+
+.hero2__marker-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px dashed rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+.hero2__marker-line {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 0.125rem;
+  height: 4.3125rem;      /* 69px */
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateX(-50%);
+}
+
+.hero2__marker-label {
+  position: absolute;
+  bottom: calc(100% + 4.3125rem);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.625rem;
+  border-radius: 0.625rem;
+  background: var(--white);
+  color: var(--blue-dark);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* ---------- Severity bars (wide layout only) ---------- */
+.hero2__severity {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hero2__severity-bar {
+  width: 1.75rem;          /* 28px */
+  height: 0.25rem;
+  border-radius: 0.125rem;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.hero2__severity-bar--active {
+  width: 1.75rem;
+  background: var(--white);
+}
+
 /* =============================================================
    2. Wide screens — the Figma ring
    ============================================================= */
@@ -649,6 +923,102 @@ body {
     opacity: 1;
     transform: translateX(0);
     pointer-events: auto;
+  }
+
+  /* ---------- Second hero state: precise Figma layout ----------
+     A fixed 1512x982px canvas — plain px throughout, matching the
+     Figma frame exactly — uniformly scaled (never upscaled past 1x)
+     to fit whichever viewport dimension is tighter. Nothing ever
+     overflows the screen, so nothing scrolls or drifts. */
+  .hero2__frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1512px;
+    height: 982px;
+    max-width: none;
+    padding: 0;
+    display: block;
+    transform: translate(-50%, -50%) scale(min(1, calc(100vw / 1512px), calc(100vh / 982px)));
+    transform-origin: center center;
+  }
+
+  .hero2__nav {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 269px;
+    height: 56px;
+    padding: 5px 5px 5px 16px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.3);
+  }
+
+  .hero2__logo {
+    height: auto;
+    padding-left: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .hero2__close {
+    width: 48px;
+    height: 46px;
+  }
+
+  .hero2__cta {
+    position: absolute;
+    top: 64px;
+    left: calc(83.33% + 16px);
+    align-self: auto;
+  }
+
+  .hero2__severity {
+    display: flex;
+    position: absolute;
+    left: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .hero2__marker { display: block; }
+
+  .hero2__footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 49px;              /* bottom row sits 933px down of the 982px frame */
+    margin-top: 0;
+    flex-direction: row;
+    height: 56px;
+  }
+
+  .hero2__dropdown {
+    position: absolute;
+    top: 0;
+    width: 269px;
+  }
+
+  #hero2NameDropdown { left: calc(12.5% + 25.5px); }
+  #hero2SkinDropdown { left: 50%; transform: translateX(-50%); }
+
+  .hero2__pill { width: 269px; }
+
+  .hero2__name-panel,
+  .hero2__skin-panel {
+    position: absolute;
+    bottom: 66px;              /* opens upward — the row sits too close to the frame's bottom edge to open down */
+    left: 0;
+    width: 269px;
+    margin-top: 0;
+  }
+
+  .hero2__stat {
+    position: absolute;
+    top: 0;
+    left: calc(87.5% - 25.5px);
+    width: 269px;
   }
 }
 
