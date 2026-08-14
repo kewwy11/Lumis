@@ -24,6 +24,7 @@
   let hoveredItem = null;
   let autoScanTimer = null;
   let lastAutoIndex = -1;
+  let interactionsDisabled = false; // true while the second hero state is opening/active
 
   /* ---------- Shared scan sweep ---------- */
   // Re-entrant: calling this again on the same portrait cancels
@@ -110,7 +111,7 @@
   }
 
   function runAutoScan() {
-    if (hoveredItem) return; // paused for the duration of any hover
+    if (hoveredItem || interactionsDisabled) return; // paused for the duration of any hover
 
     const portrait = items[pickAutoIndex()].querySelector(".portrait");
     clearPendingHide(portrait);
@@ -148,6 +149,7 @@
     const portrait = item.querySelector(".portrait");
 
     item.addEventListener("mouseenter", () => {
+      if (interactionsDisabled) return;
       hoveredItem = item;
       pauseAutoScan();
       stopAllExcept(item);
@@ -172,11 +174,25 @@
       clearPendingHide(portrait);
       hideMarkers(portrait);
 
-      if (!hoveredItem && !prefersReducedMotion) {
+      if (!hoveredItem && !prefersReducedMotion && !interactionsDisabled) {
         pauseAutoScan(); // guard against a stray double-schedule
         scheduleNextAutoScan();
       }
     });
+  });
+
+  // Coordinated with the second hero state (script.js, "Second hero state"):
+  // while it's opening or open, every automatic/hover animation here freezes.
+  document.addEventListener("lumis:analysis-opening", () => {
+    interactionsDisabled = true;
+    hoveredItem = null;
+    pauseAutoScan();
+    stopAllExcept(null);
+  });
+
+  document.addEventListener("lumis:analysis-closed", () => {
+    interactionsDisabled = false;
+    if (!prefersReducedMotion) scheduleNextAutoScan();
   });
 })();
 
@@ -212,6 +228,7 @@
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let index = 0;
+  let rotateTimer = null;
 
   function buildChars(text) {
     wordEl.innerHTML = "";
@@ -229,12 +246,23 @@
   chip.dataset.theme = WORDS[0].theme;
 
   if (prefersReducedMotion) {
-    setInterval(() => {
+    function rotateInstant() {
       index = (index + 1) % WORDS.length;
       const next = WORDS[index];
       buildChars(next.text);
       chip.dataset.theme = next.theme;
-    }, ROTATE_INTERVAL);
+    }
+    rotateTimer = setInterval(rotateInstant, ROTATE_INTERVAL);
+
+    // Coordinated with the second hero state: pause/resume word rotation
+    // while it's opening or open.
+    document.addEventListener("lumis:analysis-opening", () => {
+      clearInterval(rotateTimer);
+      rotateTimer = null;
+    });
+    document.addEventListener("lumis:analysis-closed", () => {
+      if (!rotateTimer) rotateTimer = setInterval(rotateInstant, ROTATE_INTERVAL);
+    });
     return;
   }
 
@@ -272,7 +300,18 @@
     }, exitTotal);
   }
 
-  setInterval(rotate, ROTATE_INTERVAL);
+  rotateTimer = setInterval(rotate, ROTATE_INTERVAL);
+
+  // Coordinated with the second hero state: pause/resume word rotation
+  // while it's opening or open. An in-flight rotate() is left to finish
+  // its own exit/enter animation rather than being cut off mid-way.
+  document.addEventListener("lumis:analysis-opening", () => {
+    clearInterval(rotateTimer);
+    rotateTimer = null;
+  });
+  document.addEventListener("lumis:analysis-closed", () => {
+    if (!rotateTimer) rotateTimer = setInterval(rotate, ROTATE_INTERVAL);
+  });
 })();
 
 /* =============================================================
@@ -303,10 +342,15 @@
 
   // Each portrait's already-established condition (from its hover card)
   // is the featured marker/stat; the other two extend that same finding
-  // across nearby facial areas. Marker positions are plain px within the
-  // fixed 1512x982 frame (see the wide-screen media query), tuned per
-  // photo's crop. skinType uses Figma's own fixed option vocabulary
-  // (node 2144:11662's skin-type dropdown, "Frame 1010/Variant2").
+  // across nearby facial areas. Marker positions (mx/my) are percentages
+  // of the 1512x982-proportioned .hero2__stage (see FRAME_W/FRAME_H and
+  // the wide-screen media query) — both axes in %, so a marker tracks the
+  // photo underneath at any screen size instead of drifting. Top-left's
+  // are taken directly off Figma (node 2323:1495); the rest are the same
+  // px-within-1512x982 positions the frame previously used, converted to
+  // % (px / 982 for my; mx was already %). skinType uses Figma's own
+  // fixed option vocabulary (node 2144:11662's skin-type dropdown,
+  // "Frame 1010/Variant2").
   const PORTRAITS = {
     "top-left": {
       image: "images/woman_topleft.png",
@@ -315,11 +359,11 @@
       skinType: "Olive skin",
       confidence: "98%",
       otherConditions: "HPI, dryness.....",
-      objectPosition: "50% 42%",
+      objectPosition: "50% 42.26%",
       markers: [
-        { label: "Acne Vulgaris", severity: "87% Severe", mx: "49.7%", my: "652px" },
-        { label: "Hyper-pigmentation", mx: "26.5%", my: "430px" },
-        { label: "Red Rashes", mx: "80.2%", my: "526px" },
+        { label: "Acne Vulgaris", severity: "87% Severe", mx: "49.74%", my: "66.4%" },
+        { label: "Hyper-pigmentation", mx: "26.46%", my: "43.9%" },
+        { label: "Red Rashes", mx: "80.16%", my: "53.67%" },
       ],
     },
     "top-right": {
@@ -331,9 +375,9 @@
       otherConditions: "Infected acne, acne vulgaris",
       objectPosition: "50% 26%",
       markers: [
-        { label: "Redness", severity: "88% Moderate", mx: "49.3%", my: "448px" },
-        { label: "Infected Acne", mx: "37.2%", my: "635px" },
-        { label: "Acne vulgaris", mx: "65.8%", my: "558px" },
+        { label: "Redness", severity: "88% Moderate", mx: "49.3%", my: "45.62%" },
+        { label: "Infected Acne", mx: "37.2%", my: "64.66%" },
+        { label: "Acne vulgaris", mx: "65.8%", my: "56.82%" },
       ],
     },
     "left": {
@@ -345,9 +389,9 @@
       otherConditions: "Freckles, skin patches",
       objectPosition: "50% 30%",
       markers: [
-        { label: "Hyper-pigmentation", severity: "90% Severe", mx: "81.9%", my: "552px" },
-        { label: "Freckles", mx: "38.7%", my: "398px" },
-        { label: "Skin Patches", mx: "47%", my: "667px" },
+        { label: "Hyper-pigmentation", severity: "90% Severe", mx: "81.9%", my: "56.21%" },
+        { label: "Freckles", mx: "38.7%", my: "40.53%" },
+        { label: "Skin Patches", mx: "47%", my: "67.92%" },
       ],
     },
     "right": {
@@ -359,9 +403,9 @@
       otherConditions: "Uneven skin, dry patches",
       objectPosition: "50% 22%",
       markers: [
-        { label: "Flaky skin", severity: "98% Severe", mx: "59.1%", my: "393px" },
-        { label: "Uneven skin", mx: "32.8%", my: "454px" },
-        { label: "Dry Patches", mx: "52.6%", my: "715px" },
+        { label: "Flaky skin", severity: "98% Severe", mx: "59.1%", my: "40.02%" },
+        { label: "Uneven skin", mx: "32.8%", my: "46.23%" },
+        { label: "Dry Patches", mx: "52.6%", my: "72.81%" },
       ],
     },
     "bottom-left": {
@@ -373,9 +417,9 @@
       otherConditions: "Acne, skin rashes",
       objectPosition: "50% 20%",
       markers: [
-        { label: "Vitiligo", severity: "95% Severe", mx: "61.7%", my: "700px" },
-        { label: "Acne", mx: "51.1%", my: "300px" },
-        { label: "Skin Rashes", mx: "32.1%", my: "835px" },
+        { label: "Vitiligo", severity: "95% Severe", mx: "61.7%", my: "71.28%" },
+        { label: "Acne", mx: "51.1%", my: "30.55%" },
+        { label: "Skin Rashes", mx: "32.1%", my: "85.03%" },
       ],
     },
     "bottom-right": {
@@ -388,12 +432,47 @@
       objectPosition: "50% 60%",
       statLabel: "Pigmentation :",
       markers: [
-        { label: "Pigmentation", severity: "87% Moderate", mx: "62%", my: "810px" },
-        { label: "Mild Acne", mx: "44.6%", my: "272px" },
-        { label: "Uneven tone", mx: "37.2%", my: "633px" },
+        { label: "Pigmentation", severity: "87% Moderate", mx: "62%", my: "82.48%" },
+        { label: "Mild Acne", mx: "44.6%", my: "27.7%" },
+        { label: "Uneven tone", mx: "37.2%", my: "64.46%" },
       ],
     },
   };
+
+  // Logical size of the Figma frame that mx/my/objectPosition are all
+  // authored against (node 2144:11662). .hero2__stage keeps this exact
+  // aspect ratio at every screen size, so these numbers never need to
+  // change per-viewport — only the stage's on-screen scale does.
+  const FRAME_W = 1512;
+  const FRAME_H = 982;
+
+  // Replaces object-fit:cover: computes the same "scale to cover, then
+  // pan to objectPosition" crop by hand against the fixed FRAME_W/H, and
+  // writes it as %-of-stage custom properties. Doing it this way (rather
+  // than object-fit on an image sized relative to the viewport) is what
+  // keeps the crop locked to the photo instead of drifting as the
+  // viewport's aspect ratio changes.
+  function applyBgGeometry(data) {
+    const iw = bg.naturalWidth;
+    const ih = bg.naturalHeight;
+    if (!iw || !ih) return;
+
+    const scale = Math.max(FRAME_W / iw, FRAME_H / ih);
+    const scaledW = iw * scale;
+    const scaledH = ih * scale;
+
+    const [posXRaw, posYRaw] = (data.objectPosition || "50% 50%").split(" ");
+    const posX = parseFloat(posXRaw) / 100;
+    const posY = parseFloat(posYRaw) / 100;
+
+    const left = -(scaledW - FRAME_W) * posX;
+    const top = -(scaledH - FRAME_H) * posY;
+
+    bg.style.setProperty("--bg-width", `${(scaledW / FRAME_W) * 100}%`);
+    bg.style.setProperty("--bg-height", `${(scaledH / FRAME_H) * 100}%`);
+    bg.style.setProperty("--bg-left", `${(left / FRAME_W) * 100}%`);
+    bg.style.setProperty("--bg-top", `${(top / FRAME_H) * 100}%`);
+  }
 
   const POSITION_CLASSES = Object.keys(PORTRAITS);
 
@@ -402,8 +481,10 @@
   }
 
   function populate(data) {
+    bg.style.objectPosition = data.objectPosition || "50% 50%"; // mobile fallback (object-fit:cover there)
+    bg.onload = () => applyBgGeometry(data);
     bg.src = data.image;
-    bg.style.objectPosition = data.objectPosition || "50% 50%";
+    if (bg.complete) applyBgGeometry(data); // already-cached image: onload won't fire again
     nameEl.textContent = data.name;
     skinTypeEl.textContent = data.skinType;
     ageEl.textContent = data.age;
@@ -467,30 +548,190 @@
     if (!event.target.closest(".hero2__dropdown")) closeDropdowns();
   });
 
+  const heroFrame = document.querySelector(".hero2__frame");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const allGalleryItems = Array.from(document.querySelectorAll(".gallery__item"));
+  const heroContent = document.querySelector(".hero");
+
+  // ---------- State machine ----------
+  // IDLE -> OPENING_ANALYSIS -> ANALYSIS_ACTIVE -> (close) -> IDLE.
+  // While OPENING_ANALYSIS: no other portrait can be clicked (open() below
+  // guards on this), and the automatic scan cycle, portrait hover, and the
+  // pill's word rotation all freeze — see the "lumis:analysis-opening" /
+  // "lumis:analysis-closed" listeners in the other two IIFEs above.
+  let appState = "IDLE";
+
+  const EXPAND_DURATION = 650;  // ms — the shared-element expansion itself
+
+  // ---------- Shared-element entrance ----------
+  // A clone of the clicked portrait grows from its grid position/size into
+  // the full-screen photo in one continuous move — no press bounce
+  // beforehand, no staggered delays. The five siblings and the central
+  // hero copy start clearing out of the way at the exact same moment the
+  // clone starts growing, and the page darkens beneath them, so everything
+  // reads as a single unified motion rather than a sequence of separate
+  // animations. The clone animates via `transform` alone (translate+scale)
+  // rather than left/top/width/height, so it stays on the compositor and
+  // never fights the browser's layout pass for a frame — that layout
+  // contention was the source of the visible pause/catch-up. Only once
+  // that clone lands does the real hero2 (already populated, sitting right
+  // underneath) get revealed, and only then does its chrome fade in — so
+  // the transition reads as "this photo unwrapped to fill the screen,"
+  // never as "a new screen appeared over it."
+
+  function flyToFullScreen(cardImg, data, onDone) {
+    const startRect = cardImg.getBoundingClientRect();
+    const startRadius = getComputedStyle(cardImg).borderRadius;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let targetLeft, targetTop, targetWidth, targetHeight;
+    if (vw >= 940) {
+      // Matches .hero2__bg's wide-screen geometry exactly: the ghost has
+      // to land exactly where applyBgGeometry() will place the real
+      // image, or the hand-off at the end of the animation visibly jumps.
+      const stageScale = Math.max(vw / FRAME_W, vh / FRAME_H);
+      const stageWidth = FRAME_W * stageScale;
+      const stageHeight = FRAME_H * stageScale;
+      const stageLeft = (vw - stageWidth) / 2;
+      const stageTop = (vh - stageHeight) / 2;
+
+      const iw = cardImg.naturalWidth || FRAME_W;
+      const ih = cardImg.naturalHeight || FRAME_H;
+      const imgScale = Math.max(FRAME_W / iw, FRAME_H / ih);
+      const scaledW = iw * imgScale;
+      const scaledH = ih * imgScale;
+      const [posXRaw, posYRaw] = (data.objectPosition || "50% 50%").split(" ");
+      const posX = parseFloat(posXRaw) / 100;
+      const posY = parseFloat(posYRaw) / 100;
+      const bgLeftLogical = -(scaledW - FRAME_W) * posX;
+      const bgTopLogical = -(scaledH - FRAME_H) * posY;
+
+      targetWidth = scaledW * stageScale;
+      targetHeight = scaledH * stageScale;
+      targetLeft = stageLeft + bgLeftLogical * stageScale;
+      targetTop = stageTop + bgTopLogical * stageScale;
+    } else {
+      // Matches .hero2__bg's mobile sizing exactly (132% of viewport, centred).
+      targetLeft = -0.16 * vw;
+      targetTop = -0.16 * vh;
+      targetWidth = 1.32 * vw;
+      targetHeight = 1.32 * vh;
+    }
+    const scaleX = targetWidth / startRect.width;
+    const scaleY = targetHeight / startRect.height;
+
+    const ghost = document.createElement("img");
+    ghost.src = cardImg.currentSrc || cardImg.src;
+    ghost.alt = "";
+    ghost.className = "hero2-ghost";
+    ghost.style.left = "0";
+    ghost.style.top = "0";
+    ghost.style.width = `${startRect.width}px`;
+    ghost.style.height = `${startRect.height}px`;
+    ghost.style.borderRadius = startRadius;
+    ghost.style.objectPosition = "50% 50%";
+    ghost.style.transformOrigin = "0 0";
+    ghost.style.transition = "none";
+    ghost.style.transform = `translate3d(${startRect.left}px, ${startRect.top}px, 0) scale(1, 1)`;
+    document.body.appendChild(ghost);
+
+    void ghost.offsetWidth; // force layout so the transition below animates from this starting transform
+
+    requestAnimationFrame(() => {
+      const d = EXPAND_DURATION / 1000;
+      // Fast, confident start that glides smoothly to a stop — no dead
+      // zone at the top, no overshoot/bounce at the bottom. The premium
+      // "unwrap" curve most high-end sites use for full-bleed reveals.
+      const ease = "cubic-bezier(0.16, 1, 0.3, 1)";
+      ghost.style.transition = `transform ${d}s ${ease}, border-radius ${d}s ${ease}, object-position ${d}s ${ease}`;
+      ghost.style.transform = `translate3d(${targetLeft}px, ${targetTop}px, 0) scale(${scaleX}, ${scaleY})`;
+      ghost.style.borderRadius = "0px";
+      ghost.style.objectPosition = data.objectPosition || "50% 50%";
+    });
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      ghost.remove();
+      onDone();
+    };
+    ghost.addEventListener("transitionend", (event) => {
+      if (event.propertyName === "transform") finish();
+    });
+    setTimeout(finish, EXPAND_DURATION + 150); // safety net if transitionend never fires
+  }
+
   function open(item) {
+    if (appState !== "IDLE") return; // one analysis transition at a time; blocks other portraits too
+
     const key = positionKeyFor(item);
     const data = PORTRAITS[key];
     if (!data) return;
 
-    populate(data);
-
-    // The side nav bars track the open portrait's position, exactly like
-    // the six per-portrait Figma frames (node 2323:1496): one bar lit per
-    // portrait, in the same reading order used everywhere else.
     const activeIndex = POSITION_CLASSES.indexOf(key);
-    severityBarEls.forEach((bar, i) => {
-      bar.classList.toggle("hero2__severity-bar--active", i === activeIndex);
-    });
+    const cardImg = item.querySelector(".card");
+    const portraitEl = item.querySelector(".portrait");
 
-    closeDropdowns();
-    hero2.hidden = false;
-    document.body.style.overflow = "hidden";
-    closeButton.focus();
+    appState = "OPENING_ANALYSIS";
+    document.dispatchEvent(new CustomEvent("lumis:analysis-opening"));
+
+    function reveal() {
+      populate(data);
+
+      // The side nav bars track the open portrait's position, exactly like
+      // the six per-portrait Figma frames (node 2323:1496): one bar lit
+      // per portrait, in the same reading order used everywhere else.
+      severityBarEls.forEach((bar, i) => {
+        bar.classList.toggle("hero2__severity-bar--active", i === activeIndex);
+      });
+
+      closeDropdowns();
+
+      if (prefersReducedMotion) {
+        hero2.hidden = false;
+      } else {
+        heroFrame.style.transition = "none";
+        heroFrame.style.opacity = "0";
+        hero2.hidden = false;
+        void heroFrame.offsetWidth;
+        heroFrame.style.transition = "";
+        heroFrame.style.opacity = "1";
+      }
+
+      document.body.style.overflow = "hidden";
+      closeButton.focus();
+      appState = "ANALYSIS_ACTIVE";
+    }
+
+    if (prefersReducedMotion || !cardImg || !portraitEl) {
+      reveal();
+      return;
+    }
+
+    // The other five portraits and the central hero copy clear out at the
+    // exact same moment the clicked portrait starts growing, and the page
+    // itself starts darkening beneath all of it right away — one unified
+    // motion instead of a sequence of separately-timed animations.
+    document.body.classList.add("is-opening-analysis");
+    allGalleryItems.forEach((other) => {
+      if (other !== item) other.classList.add("is-hidden-for-analysis");
+    });
+    if (heroContent) heroContent.classList.add("is-hidden-for-analysis");
+
+    flyToFullScreen(cardImg, data, reveal);
   }
 
   function close() {
     hero2.hidden = true;
     document.body.style.overflow = "";
+    document.body.classList.remove("is-opening-analysis");
+    allGalleryItems.forEach((other) => other.classList.remove("is-hidden-for-analysis"));
+    if (heroContent) heroContent.classList.remove("is-hidden-for-analysis");
+    appState = "IDLE";
+    document.dispatchEvent(new CustomEvent("lumis:analysis-closed"));
   }
 
   document.querySelectorAll(".gallery__item").forEach((item) => {

@@ -59,6 +59,14 @@ body {
   font-family: var(--font);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease;
+}
+
+/* Opening the second hero state: the page itself darkens underneath
+   the fading hero content, so the environment shifts gradually rather
+   than snapping to hero2's dark background the instant it's revealed. */
+body.is-opening-analysis {
+  background: var(--header);
 }
 
 .visually-hidden {
@@ -162,6 +170,27 @@ body {
   gap: 1rem;                  /* 16px between title and subtitle */
   margin-top: 3rem;
   text-align: center;
+  transition: opacity 0.38s ease-out, transform 0.38s ease-out;
+}
+
+/* Opening the second hero state: the pill/headline/subtitle/CTAs clear
+   out of the way as a unit while the clicked portrait expands. */
+.hero.is-hidden-for-analysis {
+  opacity: 0;
+  transform: translateY(-0.75rem);   /* -12px */
+  pointer-events: none;
+}
+
+.gallery__item {
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+/* Same moment: every portrait except the one being opened fades and
+   settles down slightly, so the clicked one reads as the sole focus. */
+.gallery__item.is-hidden-for-analysis {
+  opacity: 0;
+  transform: translateY(0.5rem);     /* 8px */
+  pointer-events: none;
 }
 
 /* Word themes (script.js cycles data-theme every 15s): each pairs a soft
@@ -593,6 +622,20 @@ body {
   height: 100%;
   padding: 1.5rem 1.25rem;
   gap: 1.5rem;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+/* Shared-element entrance (script.js): a clone of the clicked portrait
+   that grows from its grid position/size into the full-screen photo,
+   so the transition reads as "this photo expanded," not "a screen
+   appeared." Sized/positioned entirely inline during the animation. */
+.hero2-ghost {
+  position: fixed;
+  z-index: 1001;
+  object-fit: cover;
+  pointer-events: none;
+  will-change: transform, border-radius;
 }
 
 .hero2__nav {
@@ -858,6 +901,11 @@ body {
     margin-top: 0;
   }
 
+  /* Combines with the centring transform above rather than replacing it. */
+  .hero.is-hidden-for-analysis {
+    transform: translateY(calc(-50% - 0.75rem));
+  }
+
   .hero__title {
     width: 100%;
     max-width: none;
@@ -980,6 +1028,35 @@ body {
     left: 80px;
     top: 50%;
     transform: translateY(-50%);
+  }
+
+  /* Image + markers: a 1512x982-proportioned stage that always covers the
+     viewport (never lets the frame's edges show through), clipped by
+     .hero2's overflow:hidden. Both the image and the markers below are
+     positioned in % of this box, so they share one coordinate space and
+     never drift apart at any screen size/aspect ratio. */
+  .hero2__stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    aspect-ratio: 1512 / 982;
+    width: max(100vw, calc(100svh * 1512 / 982));
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+  }
+
+  /* Cropped/positioned by script.js (--bg-*), which replicates a manual
+     object-fit:cover crop against the fixed 1512x982 frame — not the
+     object-fit property itself, so the crop stays exact as the stage
+     scales rather than being recomputed by the browser against whatever
+     box the image happens to be in. */
+  .hero2__bg {
+    top: var(--bg-top, 0%);
+    left: var(--bg-left, 0%);
+    width: var(--bg-width, 100%);
+    height: var(--bg-height, 100%);
+    transform: none;
+    object-fit: fill;
   }
 
   .hero2__marker { display: block; }

@@ -302,7 +302,32 @@
   <!-- Second hero state: a full-screen expansion of whichever portrait was
        clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662). -->
   <section class="hero2" id="hero2" hidden>
-    <img class="hero2__bg" id="hero2Bg" src="" alt="">
+    <!-- Image + face-annotation markers share one coordinate space: a
+         1512x982-proportioned stage that always covers the viewport
+         (aspect-ratio + width:max(100vw, 100svh*ratio)), clipped by
+         .hero2's overflow:hidden. Markers are positioned in % of this
+         stage, so they never drift from the photo underneath, at any
+         screen size. -->
+    <div class="hero2__stage" id="hero2Stage">
+      <img class="hero2__bg" id="hero2Bg" src="" alt="">
+
+      <div class="hero2__marker" id="hero2Marker0">
+        <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker1">
+        <span class="hero2__marker-label" id="hero2MarkerLabel1"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker2">
+        <span class="hero2__marker-label" id="hero2MarkerLabel2"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+    </div>
+
     <div class="hero2__scrim" aria-hidden="true"></div>
 
     <div class="hero2__frame">
@@ -324,22 +349,6 @@
         <span class="hero2__severity-bar"></span>
         <span class="hero2__severity-bar"></span>
         <span class="hero2__severity-bar"></span>
-      </div>
-
-      <div class="hero2__marker" id="hero2Marker0">
-        <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
-      </div>
-      <div class="hero2__marker" id="hero2Marker1">
-        <span class="hero2__marker-label" id="hero2MarkerLabel1"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
-      </div>
-      <div class="hero2__marker" id="hero2Marker2">
-        <span class="hero2__marker-label" id="hero2MarkerLabel2"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
       </div>
 
       <div class="hero2__footer">
