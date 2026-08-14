@@ -299,6 +299,7 @@
     root: document.getElementById(`hero2Marker${i}`),
     label: document.getElementById(`hero2MarkerLabel${i}`),
   }));
+  const severityBarEls = Array.from(document.querySelectorAll("#hero2Severity .hero2__severity-bar"));
 
   // Each portrait's already-established condition (from its hover card)
   // is the featured marker/stat; the other two extend that same finding
@@ -323,16 +324,16 @@
     },
     "top-right": {
       image: "images/man_topright.png",
-      name: "Marcus Webb",
+      name: "Marcuss Webb",
       age: "22 years old",
       skinType: "Milky white skin",
       confidence: "90%",
-      otherConditions: "Enlarged pores, oiliness",
+      otherConditions: "Infected acne, acne vulgaris",
       objectPosition: "50% 26%",
       markers: [
-        { label: "Redness", severity: "88% Moderate", mx: "36%", my: "580px" },
-        { label: "Acne Vulgaris", mx: "65%", my: "560px" },
-        { label: "Enlarged Pores", mx: "51%", my: "615px" },
+        { label: "Redness", severity: "88% Moderate", mx: "49.3%", my: "448px" },
+        { label: "Infected Acne", mx: "37.2%", my: "635px" },
+        { label: "Acne vulgaris", mx: "65.8%", my: "558px" },
       ],
     },
     "left": {
@@ -341,40 +342,40 @@
       age: "26 years old",
       skinType: "Deep brown skin",
       confidence: "95%",
-      otherConditions: "Freckles, dark spots",
+      otherConditions: "Freckles, skin patches",
       objectPosition: "50% 30%",
       markers: [
-        { label: "Hyperpigmentation", severity: "93% Severe", mx: "30%", my: "506px" },
-        { label: "Freckles", mx: "34%", my: "260px" },
-        { label: "Dark Spots", mx: "28%", my: "753px" },
+        { label: "Hyper-pigmentation", severity: "90% Severe", mx: "81.9%", my: "552px" },
+        { label: "Freckles", mx: "38.7%", my: "398px" },
+        { label: "Skin Patches", mx: "47%", my: "667px" },
       ],
     },
     "right": {
       image: "images/woman_middleright.png",
       name: "Naledi Okafor",
       age: "24 years old",
-      skinType: "Black Skin",
+      skinType: "Black skin",
       confidence: "97%",
-      otherConditions: "Smooth texture",
+      otherConditions: "Uneven skin, dry patches",
       objectPosition: "50% 22%",
       markers: [
-        { label: "Even Tone", severity: "96% Balanced", mx: "48%", my: "440px" },
-        { label: "Smooth Texture", mx: "35%", my: "320px" },
-        { label: "Balanced Hydration", mx: "60%", my: "544px" },
+        { label: "Flaky skin", severity: "98% Severe", mx: "59.1%", my: "393px" },
+        { label: "Uneven skin", mx: "32.8%", my: "454px" },
+        { label: "Dry Patches", mx: "52.6%", my: "715px" },
       ],
     },
     "bottom-left": {
       image: "images/woman_bottomleft.png",
-      name: "Simone Carter",
+      name: "Simone Tanya",
       age: "31 years old",
-      skinType: "Dark Skin",
+      skinType: "Brown Skin",
       confidence: "96%",
-      otherConditions: "Dry patches, sun sensitivity",
+      otherConditions: "Acne, skin rashes",
       objectPosition: "50% 20%",
       markers: [
-        { label: "Vitiligo", severity: "94% Widespread", mx: "55%", my: "245px" },
-        { label: "Dry Patches", mx: "39%", my: "405px" },
-        { label: "Sun Sensitivity", mx: "70%", my: "636px" },
+        { label: "Vitiligo", severity: "95% Severe", mx: "61.7%", my: "700px" },
+        { label: "Acne", mx: "51.1%", my: "300px" },
+        { label: "Skin Rashes", mx: "32.1%", my: "835px" },
       ],
     },
     "bottom-right": {
@@ -383,12 +384,13 @@
       age: "27 years old",
       skinType: "Bronze skin",
       confidence: "93%",
-      otherConditions: "Uneven tone, sun damage",
+      otherConditions: "Mild acne, uneven tone",
       objectPosition: "50% 60%",
+      statLabel: "Pigmentation :",
       markers: [
-        { label: "Pigmentation", severity: "90% Moderate", mx: "54%", my: "550px" },
-        { label: "Uneven Tone", mx: "42%", my: "795px" },
-        { label: "Sun Damage", mx: "66%", my: "579px" },
+        { label: "Pigmentation", severity: "87% Moderate", mx: "62%", my: "810px" },
+        { label: "Mild Acne", mx: "44.6%", my: "272px" },
+        { label: "Uneven tone", mx: "37.2%", my: "633px" },
       ],
     },
   };
@@ -409,7 +411,7 @@
     otherEl.textContent = data.otherConditions;
 
     const [primary, ...rest] = data.markers;
-    statNameEl.textContent = `${primary.label}:`;
+    statNameEl.textContent = data.statLabel || `${primary.label}:`;
     statValueEl.textContent = ` ${primary.severity}`;
     dominantEl.textContent = primary.label;
 
@@ -471,6 +473,15 @@
     if (!data) return;
 
     populate(data);
+
+    // The side nav bars track the open portrait's position, exactly like
+    // the six per-portrait Figma frames (node 2323:1496): one bar lit per
+    // portrait, in the same reading order used everywhere else.
+    const activeIndex = POSITION_CLASSES.indexOf(key);
+    severityBarEls.forEach((bar, i) => {
+      bar.classList.toggle("hero2__severity-bar--active", i === activeIndex);
+    });
+
     closeDropdowns();
     hero2.hidden = false;
     document.body.style.overflow = "hidden";

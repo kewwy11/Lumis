@@ -984,6 +984,11 @@ body {
 
   .hero2__marker { display: block; }
 
+  /* Measured directly off the reference renders: 80px outer margins,
+     matching the severity indicator's left offset, with the three
+     269px-wide items evenly spaced between — space-between reproduces
+     that exactly (269 + 272.5 gap + 269 + 272.5 gap + 269 = 1352,
+     the frame's 1512px minus the 80px margin on each side). */
   .hero2__footer {
     position: absolute;
     left: 0;
@@ -991,17 +996,16 @@ body {
     bottom: 49px;              /* bottom row sits 933px down of the 982px frame */
     margin-top: 0;
     flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0 80px;
     height: 56px;
   }
 
   .hero2__dropdown {
-    position: absolute;
-    top: 0;
+    position: relative;
     width: 269px;
   }
-
-  #hero2NameDropdown { left: calc(12.5% + 25.5px); }
-  #hero2SkinDropdown { left: 50%; transform: translateX(-50%); }
 
   .hero2__pill { width: 269px; }
 
@@ -1015,9 +1019,7 @@ body {
   }
 
   .hero2__stat {
-    position: absolute;
-    top: 0;
-    left: calc(87.5% - 25.5px);
+    position: relative;
     width: 269px;
   }
 }
