@@ -345,10 +345,13 @@
   // across nearby facial areas. Marker positions (mx/my) are percentages
   // of the 1512x982-proportioned .hero2__stage (see FRAME_W/FRAME_H and
   // the wide-screen media query) — both axes in %, so a marker tracks the
-  // photo underneath at any screen size instead of drifting. Top-left's
-  // are taken directly off Figma (node 2323:1495); the rest are the same
-  // px-within-1512x982 positions the frame previously used, converted to
-  // % (px / 982 for my; mx was already %). skinType uses Figma's own
+  // photo underneath at any screen size instead of drifting. top-left,
+  // top-right, left, and right are taken directly off Figma (nodes
+  // 2323:1495, 2323:1493, 2323:1491, 2323:1494 respectively, matched to
+  // each other by marker label, not by ellipse order — Figma doesn't
+  // keep a consistent primary-marker slot); bottom-left/bottom-right are
+  // still the frame's previous px-within-1512x982 positions, converted
+  // to % (px / 982 for my; mx was already %). skinType uses Figma's own
   // fixed option vocabulary (node 2144:11662's skin-type dropdown,
   // "Frame 1010/Variant2").
   const PORTRAITS = {
@@ -375,9 +378,9 @@
       otherConditions: "Infected acne, acne vulgaris",
       objectPosition: "50% 26%",
       markers: [
-        { label: "Redness", severity: "88% Moderate", mx: "49.3%", my: "45.62%" },
-        { label: "Infected Acne", mx: "37.2%", my: "64.66%" },
-        { label: "Acne vulgaris", mx: "65.8%", my: "56.82%" },
+        { label: "Redness", severity: "88% Moderate", mx: "49.47%", my: "47.05%" },
+        { label: "Infected Acne", mx: "37.24%", my: "64.56%" },
+        { label: "Acne vulgaris", mx: "65.81%", my: "57.43%" },
       ],
     },
     "left": {
@@ -389,9 +392,9 @@
       otherConditions: "Freckles, skin patches",
       objectPosition: "50% 30%",
       markers: [
-        { label: "Hyper-pigmentation", severity: "90% Severe", mx: "81.9%", my: "56.21%" },
-        { label: "Freckles", mx: "38.7%", my: "40.53%" },
-        { label: "Skin Patches", mx: "47%", my: "67.92%" },
+        { label: "Hyper-pigmentation", severity: "90% Severe", mx: "81.94%", my: "56.21%" },
+        { label: "Freckles", mx: "38.62%", my: "40.53%" },
+        { label: "Skin Patches", mx: "46.96%", my: "67.92%" },
       ],
     },
     "right": {
@@ -403,9 +406,9 @@
       otherConditions: "Uneven skin, dry patches",
       objectPosition: "50% 22%",
       markers: [
-        { label: "Flaky skin", severity: "98% Severe", mx: "59.1%", my: "40.02%" },
-        { label: "Uneven skin", mx: "32.8%", my: "46.23%" },
-        { label: "Dry Patches", mx: "52.6%", my: "72.81%" },
+        { label: "Flaky skin", severity: "98% Severe", mx: "59%", my: "40.12%" },
+        { label: "Uneven skin", mx: "32.74%", my: "46.33%" },
+        { label: "Dry Patches", mx: "52.58%", my: "72.61%" },
       ],
     },
     "bottom-left": {
@@ -446,18 +449,30 @@
   const FRAME_W = 1512;
   const FRAME_H = 982;
 
-  // Replaces object-fit:cover: computes the same "scale to cover, then
-  // pan to objectPosition" crop by hand against the fixed FRAME_W/H, and
-  // writes it as %-of-stage custom properties. Doing it this way (rather
-  // than object-fit on an image sized relative to the viewport) is what
-  // keeps the crop locked to the photo instead of drifting as the
-  // viewport's aspect ratio changes.
+  // Figma's own source rectangle (the "Gemini_Generated_Image..." layer)
+  // sits at the exact same x=0, y=-224, w=1512, h=1512 on every portrait
+  // node (2323:1495/1493/1491/1494 checked directly) — a fixed template,
+  // not a per-portrait tune. What actually varies per portrait is which
+  // SQUARE region of that portrait's own (non-square) source photo fills
+  // that 1512x1512 box. So the crop is two steps: (1) cover-fit the photo
+  // into a square, panned via objectPosition, exactly like object-fit:
+  // cover would for a 1:1 target; (2) drop that square at the fixed
+  // template offset. A plain cover-fit straight against the 1512x982
+  // frame (skipping the square step) undersells the zoom on any photo
+  // that isn't already square — e.g. a 1402x1122 photo only needs 1.08x
+  // scale to cover 1512x982 directly, but Figma's template scales its
+  // square crop by 1.35x, so skipping step 1 leaves the face visibly
+  // smaller than the reference and the markers land on the wrong pores.
+  const SQUARE = 1512;
+  const SQUARE_TOP = -224;
+
   function applyBgGeometry(data) {
     const iw = bg.naturalWidth;
     const ih = bg.naturalHeight;
     if (!iw || !ih) return;
 
-    const scale = Math.max(FRAME_W / iw, FRAME_H / ih);
+    const s = Math.min(iw, ih); // the square's source side, before scaling to 1512
+    const scale = SQUARE / s;
     const scaledW = iw * scale;
     const scaledH = ih * scale;
 
@@ -465,8 +480,11 @@
     const posX = parseFloat(posXRaw) / 100;
     const posY = parseFloat(posYRaw) / 100;
 
-    const left = -(scaledW - FRAME_W) * posX;
-    const top = -(scaledH - FRAME_H) * posY;
+    // Only one axis ever actually overflows the square (whichever native
+    // dimension wasn't the shorter one) — that's the axis objectPosition
+    // pans. The other sits flush at 0, same as Figma's fixed rectangle.
+    const left = scaledW > SQUARE ? -(scaledW - SQUARE) * posX : 0;
+    const top = (scaledH > SQUARE ? -(scaledH - SQUARE) * posY : 0) + SQUARE_TOP;
 
     bg.style.setProperty("--bg-width", `${(scaledW / FRAME_W) * 100}%`);
     bg.style.setProperty("--bg-height", `${(scaledH / FRAME_H) * 100}%`);
@@ -548,190 +566,118 @@
     if (!event.target.closest(".hero2__dropdown")) closeDropdowns();
   });
 
-  const heroFrame = document.querySelector(".hero2__frame");
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const allGalleryItems = Array.from(document.querySelectorAll(".gallery__item"));
-  const heroContent = document.querySelector(".hero");
+  // ---------- Screen transition ----------
+  // .screen2 (wrapping .hero2, untouched) fades/scales in from 1.04, .stage
+  // (screen1 — hero1's own navbar included, it does not carry into hero2)
+  // fades out under it on the same beat — one curve, both starting at the
+  // same moment, reversed exactly on close. See style.css for the class
+  // definitions; this just toggles them and drives what CSS can't (the
+  // open/close duration split, and restoring scroll position).
+  const screen2 = document.getElementById("screen2");
+  const stage = document.querySelector(".stage");
+  const OPEN_MS = 600;
+  const CLOSE_MS = 480;
 
-  // ---------- State machine ----------
-  // IDLE -> OPENING_ANALYSIS -> ANALYSIS_ACTIVE -> (close) -> IDLE.
-  // While OPENING_ANALYSIS: no other portrait can be clicked (open() below
-  // guards on this), and the automatic scan cycle, portrait hover, and the
-  // pill's word rotation all freeze — see the "lumis:analysis-opening" /
-  // "lumis:analysis-closed" listeners in the other two IIFEs above.
-  let appState = "IDLE";
+  // ---------- hero2's own close button: hamburger <-> X ----------
+  // hero2 has its own nav bar, so the hamburger-hold-then-X icon lives on
+  // its close button, not the page nav's — that one is untouched by any of
+  // this. The icon holds its hamburger shape through the whole screen
+  // transition, then waits once more before becoming an X — the wait is
+  // measured from when the screen transition finishes, not from the
+  // click. Named so the hold is a one-line change.
+  const ICON_HOLD_MS = 1500;
+  let iconTimer = null;
 
-  const EXPAND_DURATION = 650;  // ms — the shared-element expansion itself
+  // ---------- Dermatology scan ----------
+  // Once the screen transition finishes, a brief pause lets the user
+  // register the new full-screen composition before anything else moves.
+  // Then one thin blue line sweeps the stage top-to-bottom, and each
+  // marker fades in as the line reaches its own vertical position — not
+  // all three at once — so it reads as the scan discovering that area.
+  // One pass; never loops, reverses, or bounces.
+  const hero2ScanLine = document.getElementById("hero2ScanLine");
+  const TRANSITION_PAUSE_MS = 120; // 100–150ms recommended range
+  const SCAN_MS = 850;             // keep in sync with .hero2__scan-line.is-scanning's duration in style.css
+  let scanTimers = [];
 
-  // ---------- Shared-element entrance ----------
-  // A clone of the clicked portrait grows from its grid position/size into
-  // the full-screen photo in one continuous move — no press bounce
-  // beforehand, no staggered delays. The five siblings and the central
-  // hero copy start clearing out of the way at the exact same moment the
-  // clone starts growing, and the page darkens beneath them, so everything
-  // reads as a single unified motion rather than a sequence of separate
-  // animations. The clone animates via `transform` alone (translate+scale)
-  // rather than left/top/width/height, so it stays on the compositor and
-  // never fights the browser's layout pass for a frame — that layout
-  // contention was the source of the visible pause/catch-up. Only once
-  // that clone lands does the real hero2 (already populated, sitting right
-  // underneath) get revealed, and only then does its chrome fade in — so
-  // the transition reads as "this photo unwrapped to fill the screen,"
-  // never as "a new screen appeared over it."
-
-  function flyToFullScreen(cardImg, data, onDone) {
-    const startRect = cardImg.getBoundingClientRect();
-    const startRadius = getComputedStyle(cardImg).borderRadius;
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    let targetLeft, targetTop, targetWidth, targetHeight;
-    if (vw >= 940) {
-      // Matches .hero2__bg's wide-screen geometry exactly: the ghost has
-      // to land exactly where applyBgGeometry() will place the real
-      // image, or the hand-off at the end of the animation visibly jumps.
-      const stageScale = Math.max(vw / FRAME_W, vh / FRAME_H);
-      const stageWidth = FRAME_W * stageScale;
-      const stageHeight = FRAME_H * stageScale;
-      const stageLeft = (vw - stageWidth) / 2;
-      const stageTop = (vh - stageHeight) / 2;
-
-      const iw = cardImg.naturalWidth || FRAME_W;
-      const ih = cardImg.naturalHeight || FRAME_H;
-      const imgScale = Math.max(FRAME_W / iw, FRAME_H / ih);
-      const scaledW = iw * imgScale;
-      const scaledH = ih * imgScale;
-      const [posXRaw, posYRaw] = (data.objectPosition || "50% 50%").split(" ");
-      const posX = parseFloat(posXRaw) / 100;
-      const posY = parseFloat(posYRaw) / 100;
-      const bgLeftLogical = -(scaledW - FRAME_W) * posX;
-      const bgTopLogical = -(scaledH - FRAME_H) * posY;
-
-      targetWidth = scaledW * stageScale;
-      targetHeight = scaledH * stageScale;
-      targetLeft = stageLeft + bgLeftLogical * stageScale;
-      targetTop = stageTop + bgTopLogical * stageScale;
-    } else {
-      // Matches .hero2__bg's mobile sizing exactly (132% of viewport, centred).
-      targetLeft = -0.16 * vw;
-      targetTop = -0.16 * vh;
-      targetWidth = 1.32 * vw;
-      targetHeight = 1.32 * vh;
-    }
-    const scaleX = targetWidth / startRect.width;
-    const scaleY = targetHeight / startRect.height;
-
-    const ghost = document.createElement("img");
-    ghost.src = cardImg.currentSrc || cardImg.src;
-    ghost.alt = "";
-    ghost.className = "hero2-ghost";
-    ghost.style.left = "0";
-    ghost.style.top = "0";
-    ghost.style.width = `${startRect.width}px`;
-    ghost.style.height = `${startRect.height}px`;
-    ghost.style.borderRadius = startRadius;
-    ghost.style.objectPosition = "50% 50%";
-    ghost.style.transformOrigin = "0 0";
-    ghost.style.transition = "none";
-    ghost.style.transform = `translate3d(${startRect.left}px, ${startRect.top}px, 0) scale(1, 1)`;
-    document.body.appendChild(ghost);
-
-    void ghost.offsetWidth; // force layout so the transition below animates from this starting transform
-
-    requestAnimationFrame(() => {
-      const d = EXPAND_DURATION / 1000;
-      // Fast, confident start that glides smoothly to a stop — no dead
-      // zone at the top, no overshoot/bounce at the bottom. The premium
-      // "unwrap" curve most high-end sites use for full-bleed reveals.
-      const ease = "cubic-bezier(0.16, 1, 0.3, 1)";
-      ghost.style.transition = `transform ${d}s ${ease}, border-radius ${d}s ${ease}, object-position ${d}s ${ease}`;
-      ghost.style.transform = `translate3d(${targetLeft}px, ${targetTop}px, 0) scale(${scaleX}, ${scaleY})`;
-      ghost.style.borderRadius = "0px";
-      ghost.style.objectPosition = data.objectPosition || "50% 50%";
-    });
-
-    let finished = false;
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      ghost.remove();
-      onDone();
-    };
-    ghost.addEventListener("transitionend", (event) => {
-      if (event.propertyName === "transform") finish();
-    });
-    setTimeout(finish, EXPAND_DURATION + 150); // safety net if transitionend never fires
+  function resetScan() {
+    scanTimers.forEach(clearTimeout);
+    scanTimers = [];
+    hero2ScanLine.classList.remove("is-scanning");
+    markerEls.forEach(({ root }) => root.classList.remove("is-visible"));
   }
 
+  function runScan() {
+    hero2ScanLine.classList.remove("is-scanning");
+    void hero2ScanLine.offsetWidth; // force reflow so a fresh .is-scanning re-triggers the animation
+    requestAnimationFrame(() => {
+      hero2ScanLine.classList.add("is-scanning");
+    });
+
+    markerEls.forEach(({ root }) => {
+      const myPercent = parseFloat(root.style.getPropertyValue("--my")) || 0;
+      const delay = Math.min(SCAN_MS, Math.max(0, (myPercent / 100) * SCAN_MS));
+      scanTimers.push(setTimeout(() => root.classList.add("is-visible"), delay));
+    });
+  }
+
+  let isOpen = false;
+  let savedScrollY = 0;
+
   function open(item) {
-    if (appState !== "IDLE") return; // one analysis transition at a time; blocks other portraits too
+    if (isOpen) return;
 
     const key = positionKeyFor(item);
     const data = PORTRAITS[key];
     if (!data) return;
 
     const activeIndex = POSITION_CLASSES.indexOf(key);
-    const cardImg = item.querySelector(".card");
-    const portraitEl = item.querySelector(".portrait");
 
-    appState = "OPENING_ANALYSIS";
+    isOpen = true;
     document.dispatchEvent(new CustomEvent("lumis:analysis-opening"));
 
-    function reveal() {
-      populate(data);
+    populate(data);
+    resetScan(); // fresh state before this activation's one scan
 
-      // The side nav bars track the open portrait's position, exactly like
-      // the six per-portrait Figma frames (node 2323:1496): one bar lit
-      // per portrait, in the same reading order used everywhere else.
-      severityBarEls.forEach((bar, i) => {
-        bar.classList.toggle("hero2__severity-bar--active", i === activeIndex);
-      });
-
-      closeDropdowns();
-
-      if (prefersReducedMotion) {
-        hero2.hidden = false;
-      } else {
-        heroFrame.style.transition = "none";
-        heroFrame.style.opacity = "0";
-        hero2.hidden = false;
-        void heroFrame.offsetWidth;
-        heroFrame.style.transition = "";
-        heroFrame.style.opacity = "1";
-      }
-
-      document.body.style.overflow = "hidden";
-      closeButton.focus();
-      appState = "ANALYSIS_ACTIVE";
-    }
-
-    if (prefersReducedMotion || !cardImg || !portraitEl) {
-      reveal();
-      return;
-    }
-
-    // The other five portraits and the central hero copy clear out at the
-    // exact same moment the clicked portrait starts growing, and the page
-    // itself starts darkening beneath all of it right away — one unified
-    // motion instead of a sequence of separately-timed animations.
-    document.body.classList.add("is-opening-analysis");
-    allGalleryItems.forEach((other) => {
-      if (other !== item) other.classList.add("is-hidden-for-analysis");
+    // The side nav bars track the open portrait's position, exactly like
+    // the six per-portrait Figma frames (node 2323:1496): one bar lit
+    // per portrait, in the same reading order used everywhere else.
+    severityBarEls.forEach((bar, i) => {
+      bar.classList.toggle("hero2__severity-bar--active", i === activeIndex);
     });
-    if (heroContent) heroContent.classList.add("is-hidden-for-analysis");
 
-    flyToFullScreen(cardImg, data, reveal);
+    closeDropdowns();
+
+    savedScrollY = window.scrollY;
+    screen2.style.setProperty("--screen2-duration", `${OPEN_MS}ms`);
+    screen2.setAttribute("aria-hidden", "false");
+    screen2.classList.add("is-open");
+    stage.classList.add("is-behind-screen2");
+    document.body.style.overflow = "hidden";
+    closeButton.focus();
+
+    clearTimeout(iconTimer);
+    iconTimer = setTimeout(() => {
+      closeButton.classList.add("is-active");
+    }, OPEN_MS + ICON_HOLD_MS);
+
+    scanTimers.push(setTimeout(runScan, OPEN_MS + TRANSITION_PAUSE_MS));
   }
 
   function close() {
-    hero2.hidden = true;
+    screen2.style.setProperty("--screen2-duration", `${CLOSE_MS}ms`);
+    screen2.classList.remove("is-open");
+    screen2.setAttribute("aria-hidden", "true");
+    stage.classList.remove("is-behind-screen2");
     document.body.style.overflow = "";
-    document.body.classList.remove("is-opening-analysis");
-    allGalleryItems.forEach((other) => other.classList.remove("is-hidden-for-analysis"));
-    if (heroContent) heroContent.classList.remove("is-hidden-for-analysis");
-    appState = "IDLE";
+    window.scrollTo(0, savedScrollY);
+    isOpen = false;
     document.dispatchEvent(new CustomEvent("lumis:analysis-closed"));
+
+    // Reverts immediately — no hold on the way back.
+    clearTimeout(iconTimer);
+    closeButton.classList.remove("is-active");
+    resetScan();
   }
 
   document.querySelectorAll(".gallery__item").forEach((item) => {
@@ -740,11 +686,13 @@
     trigger.addEventListener("click", () => open(item));
   });
 
+  // Always closes hero2 on click — hamburger or X, its function never
+  // depends on its current appearance.
   const closeButton = document.getElementById("hero2Close");
   closeButton.addEventListener("click", close);
 
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || hero2.hidden) return;
+    if (event.key !== "Escape" || !isOpen) return;
     if (anyDropdownOpen()) {
       closeDropdowns();
     } else {

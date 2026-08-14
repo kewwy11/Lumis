@@ -300,8 +300,12 @@
   </div>
 
   <!-- Second hero state: a full-screen expansion of whichever portrait was
-       clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662). -->
-  <section class="hero2" id="hero2" hidden>
+       clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662).
+       .screen2 owns the open/close screen transition (opacity+scale); .hero2
+       and everything inside it is untouched by that — always rendered, never
+       display:none, so the transition can actually animate. -->
+  <div class="screen2" id="screen2" aria-hidden="true">
+  <section class="hero2" id="hero2">
     <!-- Image + face-annotation markers share one coordinate space: a
          1512x982-proportioned stage that always covers the viewport
          (aspect-ratio + width:max(100vw, 100svh*ratio)), clipped by
@@ -310,6 +314,7 @@
          screen size. -->
     <div class="hero2__stage" id="hero2Stage">
       <img class="hero2__bg" id="hero2Bg" src="" alt="">
+      <span class="hero2__scan-line" id="hero2ScanLine" aria-hidden="true"></span>
 
       <div class="hero2__marker" id="hero2Marker0">
         <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
@@ -336,7 +341,7 @@
           <img src="icons/lumislogo-white.svg" alt="Lumis" width="99" height="24">
         </span>
         <button class="hero2__close" type="button" id="hero2Close" aria-label="Close analysis view">
-          <img src="icons/close.svg" alt="" width="28" height="28">
+          <span class="hero2__close-bars" aria-hidden="true"></span>
         </button>
       </header>
 
@@ -399,6 +404,7 @@
       </div>
     </div>
   </section>
+  </div>
 
   <script src="script.js"></script>
 </body>

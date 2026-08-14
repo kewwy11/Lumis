@@ -59,14 +59,6 @@ body {
   font-family: var(--font);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.5s ease;
-}
-
-/* Opening the second hero state: the page itself darkens underneath
-   the fading hero content, so the environment shifts gradually rather
-   than snapping to hero2's dark background the instant it's revealed. */
-body.is-opening-analysis {
-  background: var(--header);
 }
 
 .visually-hidden {
@@ -94,6 +86,19 @@ body.is-opening-analysis {
   max-width: 1512px;
   margin-inline: auto;
   padding: 1.5rem 1.25rem 3.5rem;
+  transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Screen2 (hero2) is open: fade this whole screen (nav included — hero1's
+   navbar does not carry into hero2, which has its own) out from underneath
+   it, same moment screen2 starts opening, then drop it from hit-testing/
+   tab order once fully invisible (the 300ms visibility delay). Closing
+   removes this class, so the base rule above (no visibility delay) fades
+   it back in and makes it interactive again immediately. */
+.stage.is-behind-screen2 {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 300ms;
 }
 
 /* ---------- Masthead ---------- */
@@ -170,27 +175,6 @@ body.is-opening-analysis {
   gap: 1rem;                  /* 16px between title and subtitle */
   margin-top: 3rem;
   text-align: center;
-  transition: opacity 0.38s ease-out, transform 0.38s ease-out;
-}
-
-/* Opening the second hero state: the pill/headline/subtitle/CTAs clear
-   out of the way as a unit while the clicked portrait expands. */
-.hero.is-hidden-for-analysis {
-  opacity: 0;
-  transform: translateY(-0.75rem);   /* -12px */
-  pointer-events: none;
-}
-
-.gallery__item {
-  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-}
-
-/* Same moment: every portrait except the one being opened fades and
-   settles down slightly, so the clicked one reads as the sole focus. */
-.gallery__item.is-hidden-for-analysis {
-  opacity: 0;
-  transform: translateY(0.5rem);     /* 8px */
-  pointer-events: none;
 }
 
 /* Word themes (script.js cycles data-theme every 15s): each pairs a soft
@@ -581,7 +565,36 @@ body.is-opening-analysis {
    media query further down.
    ============================================================= */
 
-.hero2[hidden] { display: none; }
+/* New outer wrapper — .hero2 and everything inside it (the precise
+   1512x982 stage, markers, image) is untouched; this just adds the
+   screen-transition surface around it. Always rendered (no display:none)
+   so opacity/transform can actually animate; closed state is invisible
+   and inert via opacity + pointer-events instead. */
+.screen2 {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(1.04);   /* closed: slightly over 1, so opening only ever scales DOWN into place */
+  pointer-events: none;
+  transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+              transform var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.screen2.is-open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen2 {
+    transform: none;              /* opacity only — no scale */
+    transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .screen2.is-open { transform: none; }
+}
 
 .hero2 {
   position: fixed;
@@ -600,6 +613,36 @@ body.is-opening-analysis {
   height: 132%;
   transform: translate(-50%, -50%);
   object-fit: cover;
+}
+
+/* Dermatological scan, once per open (script.js) — same restrained blue
+   glow as the gallery portraits' own .scan-line, just travelling the full
+   stage top-to-bottom in one pass. No loop, no reverse, no bounce. */
+.hero2__scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -4%;
+  height: 0.125rem;           /* 2px */
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent, rgba(37, 99, 235, 0.75) 20%,
+    #ffffff 50%,
+    rgba(37, 99, 235, 0.75) 80%, transparent
+  );
+  box-shadow: 0 0 0.375rem 0.0625rem rgba(37, 99, 235, 0.85),
+              0 0 1rem 0.25rem rgba(37, 99, 235, 0.4);
+}
+
+.hero2__scan-line.is-scanning {
+  animation: scan-sweep-y 850ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__scan-line { display: none; }
 }
 
 .hero2__scrim {
@@ -622,20 +665,6 @@ body.is-opening-analysis {
   height: 100%;
   padding: 1.5rem 1.25rem;
   gap: 1.5rem;
-  opacity: 1;
-  transition: opacity 0.35s ease;
-}
-
-/* Shared-element entrance (script.js): a clone of the clicked portrait
-   that grows from its grid position/size into the full-screen photo,
-   so the transition reads as "this photo expanded," not "a screen
-   appeared." Sized/positioned entirely inline during the animation. */
-.hero2-ghost {
-  position: fixed;
-  z-index: 1001;
-  object-fit: cover;
-  pointer-events: none;
-  will-change: transform, border-radius;
 }
 
 .hero2__nav {
@@ -671,6 +700,46 @@ body.is-opening-analysis {
   border-radius: 0.5rem;
   background: var(--white);
   cursor: pointer;
+}
+
+/* Always closes hero2 on click, hamburger or X — see script.js. Holds its
+   hamburger shape through the screen-open transition plus ICON_HOLD_MS,
+   then morphs to an X; reverts immediately (no hold) on close. Same bars
+   mechanism as the page nav's hamburger, just recoloured for this button's
+   white background. */
+.hero2__close-bars {
+  position: relative;
+  display: block;
+  width: 1.75rem;       /* 28px, matches the closed icon's old size */
+  height: 0.75rem;      /* 12px */
+}
+
+.hero2__close-bars::before,
+.hero2__close-bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--blue-dark);
+  transition: transform 350ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hero2__close-bars::before { top: 0; }
+.hero2__close-bars::after { bottom: 0; }
+
+.hero2__close.is-active .hero2__close-bars::before {
+  transform: translateY(0.3125rem) rotate(45deg);    /* +5px: half the 10px gap */
+}
+
+.hero2__close.is-active .hero2__close-bars::after {
+  transform: translateY(-0.3125rem) rotate(-45deg);  /* -5px */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__close-bars::before,
+  .hero2__close-bars::after { transition: none; }
 }
 
 .hero2__cta {
@@ -809,7 +878,21 @@ body.is-opening-analysis {
   top: var(--my);
   width: 4.125rem;        /* 66px */
   height: 4.125rem;
-  transform: translate(-50%, -50%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* One at a time, as the scan passes each marker's own position — see
+   script.js, which times this per-marker rather than all at once. */
+.hero2__marker.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__marker { transition: none; }
 }
 
 .hero2__marker-ring {
@@ -899,11 +982,6 @@ body.is-opening-analysis {
     width: 35.5rem;           /* 568px */
     gap: 1rem;
     margin-top: 0;
-  }
-
-  /* Combines with the centring transform above rather than replacing it. */
-  .hero.is-hidden-for-analysis {
-    transform: translateY(calc(-50% - 0.75rem));
   }
 
   .hero__title {
@@ -1054,6 +1132,7 @@ body.is-opening-analysis {
     top: var(--bg-top, 0%);
     left: var(--bg-left, 0%);
     width: var(--bg-width, 100%);
+    max-width: none; /* the global img{max-width:100%} reset would otherwise clip any crop wider than the stage */
     height: var(--bg-height, 100%);
     transform: none;
     object-fit: fill;
