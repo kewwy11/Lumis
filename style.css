@@ -457,7 +457,7 @@ body {
 
 .gallery__item:hover .portrait {
   transform: translateY(-0.4375rem);  /* ~7px: raises the photo off the surface */
-  box-shadow: 0 1.25rem 2.5rem -0.5rem rgba(37, 99, 235, 0.35),
+  box-shadow: 0 1.25rem 2.5rem -0.5rem rgba(167, 194, 253, 0.288),
               0 0.5rem 1rem -0.25rem rgba(37, 99, 235, 0.18);
 }
 
