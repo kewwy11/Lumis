@@ -872,27 +872,17 @@ body {
 .hero2__stat-value { font-weight: 400; }
 
 /* ---------- Face annotation markers (wide layout only) ---------- */
+/* Purely a positioning wrapper now — the ring, line and label each own
+   their own reveal (below), rather than the whole group fading in as one
+   block, so the connector visibly draws itself in before the label lands
+   instead of everything just appearing together. */
 .hero2__marker {
   position: absolute;
   left: var(--mx);
   top: var(--my);
   width: 4.125rem;        /* 66px */
   height: 4.125rem;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.4);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* One at a time, as the scan passes each marker's own position — see
-   script.js, which times this per-marker rather than all at once. */
-.hero2__marker.is-visible {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero2__marker { transition: none; }
+  transform: translate(-50%, -50%);
 }
 
 .hero2__marker-ring {
@@ -900,14 +890,16 @@ body {
   inset: 0;
   border: 2px dashed rgba(255, 255, 255, 0.85);
   border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.75);
 }
 
 .hero2__marker-line {
   position: absolute;
-  bottom: 100%;
+  bottom: 100%;              /* anchored at the ring's edge, so growth reads as reaching up toward the label */
   left: 50%;
   width: 0.125rem;
-  height: 4.3125rem;      /* 69px */
+  height: 0;
   background: rgba(255, 255, 255, 0.85);
   transform: translateX(-50%);
 }
@@ -923,6 +915,66 @@ body {
   color: var(--blue-dark);
   font-size: 1rem;
   white-space: nowrap;
+  opacity: 0;
+}
+
+/* Reveal, triggered by script.js adding .is-visible to .hero2__marker at
+   this marker's own scheduled moment (staggered, so it reads as the scan
+   discovering each area in turn rather than everything appearing at
+   once). Ring: the small circular "target" — one subtle overshoot past
+   full size then settling, never a repeating pulse or a bounce. Line:
+   grows from the target toward the label, like it's being drawn, starting
+   the same moment as the ring. Label: only starts once the line's full
+   220ms is over — strictly after, not overlapping it — so the sequence
+   reads as connector-finishes-drawing, then label lands. */
+.hero2__marker.is-visible .hero2__marker-ring {
+  animation: hero2-marker-ring-in 300ms ease-out forwards;
+}
+
+.hero2__marker.is-visible .hero2__marker-line {
+  animation: hero2-marker-line-in 220ms ease-out forwards;
+}
+
+.hero2__marker.is-visible .hero2__marker-label {
+  animation: hero2-marker-label-in 200ms ease-out 220ms forwards;
+}
+
+@keyframes hero2-marker-ring-in {
+  0%   { opacity: 0; transform: scale(0.75); }
+  60%  { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hero2-marker-line-in {
+  from { height: 0; }
+  to   { height: 4.3125rem; }   /* 69px, the connector's full length */
+}
+
+@keyframes hero2-marker-label-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__marker-ring,
+  .hero2__marker-line,
+  .hero2__marker-label { transition: none; }
+
+  .hero2__marker.is-visible .hero2__marker-ring {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .hero2__marker.is-visible .hero2__marker-line {
+    animation: none;
+    height: 4.3125rem;
+  }
+
+  .hero2__marker.is-visible .hero2__marker-label {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* ---------- Severity bars (wide layout only) ---------- */

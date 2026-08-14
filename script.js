@@ -591,14 +591,18 @@
   // ---------- Dermatology scan ----------
   // Once the screen transition finishes, a brief pause lets the user
   // register the new full-screen composition before anything else moves.
-  // Then one thin blue line sweeps the stage top-to-bottom, and each
-  // marker fades in as the line reaches its own vertical position — not
-  // all three at once — so it reads as the scan discovering that area.
-  // One pass; never loops, reverses, or bounces.
+  // Then one thin blue line sweeps the stage top-to-bottom (one pass —
+  // never loops, reverses, or bounces), and the three markers fade in one
+  // at a time, each MARKER_STEP_MS after the last, rather than all at
+  // once — see below for the per-marker reveal itself.
   const hero2ScanLine = document.getElementById("hero2ScanLine");
   const TRANSITION_PAUSE_MS = 120; // 100–150ms recommended range
-  const SCAN_MS = 850;             // keep in sync with .hero2__scan-line.is-scanning's duration in style.css
   let scanTimers = [];
+
+  // First marker appears MARKER_BASE_MS after open(); each next one
+  // MARKER_STEP_MS after that (650ms, 850ms, 1050ms with these defaults).
+  const MARKER_BASE_MS = 650;
+  const MARKER_STEP_MS = 200;
 
   function resetScan() {
     scanTimers.forEach(clearTimeout);
@@ -612,12 +616,6 @@
     void hero2ScanLine.offsetWidth; // force reflow so a fresh .is-scanning re-triggers the animation
     requestAnimationFrame(() => {
       hero2ScanLine.classList.add("is-scanning");
-    });
-
-    markerEls.forEach(({ root }) => {
-      const myPercent = parseFloat(root.style.getPropertyValue("--my")) || 0;
-      const delay = Math.min(SCAN_MS, Math.max(0, (myPercent / 100) * SCAN_MS));
-      scanTimers.push(setTimeout(() => root.classList.add("is-visible"), delay));
     });
   }
 
@@ -662,6 +660,10 @@
     }, OPEN_MS + ICON_HOLD_MS);
 
     scanTimers.push(setTimeout(runScan, OPEN_MS + TRANSITION_PAUSE_MS));
+
+    markerEls.forEach(({ root }, i) => {
+      scanTimers.push(setTimeout(() => root.classList.add("is-visible"), MARKER_BASE_MS + i * MARKER_STEP_MS));
+    });
   }
 
   function close() {
