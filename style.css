@@ -638,7 +638,7 @@ body {
 }
 
 .hero2__scan-line.is-scanning {
-  animation: scan-sweep-y 850ms linear;
+  animation: scan-sweep-y 600ms linear;
 }
 
 @media (prefers-reduced-motion: reduce) {

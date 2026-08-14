@@ -592,15 +592,16 @@
   // Once the screen transition finishes, a brief pause lets the user
   // register the new full-screen composition before anything else moves.
   // Then one thin blue line sweeps the stage top-to-bottom (one pass —
-  // never loops, reverses, or bounces), and the three markers fade in one
-  // at a time, each MARKER_STEP_MS after the last, rather than all at
-  // once — see below for the per-marker reveal itself.
+  // never loops, reverses, or bounces), and only once that's fully done
+  // do the three markers start fading in, one at a time — see below for
+  // the per-marker reveal itself.
   const hero2ScanLine = document.getElementById("hero2ScanLine");
   const TRANSITION_PAUSE_MS = 120; // 100–150ms recommended range
   let scanTimers = [];
 
-  // First marker appears MARKER_BASE_MS after open(); each next one
-  // MARKER_STEP_MS after that (650ms, 850ms, 1050ms with these defaults).
+  // First marker appears MARKER_BASE_MS after the scan starts, each next
+  // one MARKER_STEP_MS after that (650ms, 850ms, 1050ms with these
+  // defaults) — all comfortably after the scan itself has finished.
   const MARKER_BASE_MS = 650;
   const MARKER_STEP_MS = 200;
 
@@ -616,6 +617,10 @@
     void hero2ScanLine.offsetWidth; // force reflow so a fresh .is-scanning re-triggers the animation
     requestAnimationFrame(() => {
       hero2ScanLine.classList.add("is-scanning");
+    });
+
+    markerEls.forEach(({ root }, i) => {
+      scanTimers.push(setTimeout(() => root.classList.add("is-visible"), MARKER_BASE_MS + i * MARKER_STEP_MS));
     });
   }
 
@@ -660,10 +665,6 @@
     }, OPEN_MS + ICON_HOLD_MS);
 
     scanTimers.push(setTimeout(runScan, OPEN_MS + TRANSITION_PAUSE_MS));
-
-    markerEls.forEach(({ root }, i) => {
-      scanTimers.push(setTimeout(() => root.classList.add("is-visible"), MARKER_BASE_MS + i * MARKER_STEP_MS));
-    });
   }
 
   function close() {
