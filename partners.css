@@ -1,0 +1,92 @@
+/* =============================================================
+   Partners — a continuous, edge-fading marquee of logos
+   Figma "MacBook Pro 14' - 21" (node 2323:1094). Reuses this
+   project's shared tokens (style.css :root) rather than redefining
+   them, but is otherwise self-contained per section — no dependency
+   on style.css's .chip (that component's word-rotation machinery is
+   irrelevant here; this pill never changes).
+   ============================================================= */
+
+.partners {
+  max-width: 1512px;
+  margin-inline: auto;
+  padding: 3rem 1.25rem 2rem;   /* 48px top / 32px bottom, matches the site's hero margin rhythm */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;                 /* 20px, between the heading and the logo row */
+}
+
+/* ---------- "Lumis Partners" heading ---------- */
+/* Same recipe as .hero__subtitle: grey-400, normal line-height, no extra styling. */
+.partners__heading {
+  margin: 0;
+  color: var(--grey-400);
+  font-size: 1.25rem;         /* 20px */
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* ---------- Logo track ---------- */
+/* The viewport clips to its own width and fades its own edges (not the
+   raw browser viewport) — .partners itself is capped at the same 1512px
+   frame the rest of the page uses, so the fade reads as part of the page's
+   composition rather than a full-bleed effect. */
+.partners__viewport {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+/* Two identical tracks, laid out side by side (width:max-content keeps
+   them from wrapping), animated left as one unit by exactly one track's
+   width (-50% of this element, since it holds two equal tracks) — so by
+   the time the first track has scrolled fully out of view, the second is
+   sitting exactly where the first started, and the loop repeats with no
+   visible seam. */
+.partners__marquee {
+  display: flex;
+  width: max-content;
+  animation: partners-scroll 32s linear infinite;
+}
+
+/* No gap on .partners__marquee itself — each track carries its own
+   trailing 32px (the padding-right below) instead, so a track's rendered
+   width already includes the gap before whatever follows it. That's what
+   makes translateX(-50%) exact: two equal-width tracks placed directly
+   adjacent means 50% of the pair is precisely one track's width, so the
+   loop seam lands with no jump. (Gap on the marquee instead would only
+   count half that trailing space towards each 50%, off by 16px.) */
+.partners__track {
+  display: flex;
+  align-items: center;
+  gap: 2rem;                 /* 32px, between logos within one track */
+  margin: 0;
+  padding: 0 2rem 0 0;
+  list-style: none;
+}
+
+.partners__logo {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.partners__logo img {
+  display: block;
+  max-width: none;           /* the global img{max-width:100%} reset would otherwise shrink these to fit the flex item */
+  /* No width/height here — the HTML width/height attributes set each logo's
+     Figma-specified box. Setting width/height (even "auto") in author CSS
+     overrides those attribute hints entirely and falls back to the SVG's
+     own intrinsic size instead, which is what silently broke sizing before. */
+}
+
+@keyframes partners-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partners__marquee { animation: none; }
+  .partners__track[aria-hidden] { display: none; }   /* only the accessible track remains, static */
+}

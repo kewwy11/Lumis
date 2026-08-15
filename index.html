@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="partners.css">
 </head>
 <body>
   <!-- The hero is one composition: a ring of portraits around a centred message.
@@ -298,6 +299,37 @@
     </ul>
 
   </div>
+
+  <!-- Partners strip: a continuous, edge-fading horizontal scroll of logos —
+       "entering and coming out of a portal." Pure CSS (no JS): two identical
+       logo tracks side by side, animated left as one unit by exactly one
+       track's width, so the loop seam is invisible. The second track is
+       aria-hidden — it exists only to fill in behind the first as it
+       scrolls off, not as separate content. -->
+  <section class="partners" aria-labelledby="partners-heading">
+    <p class="partners__heading" id="partners-heading">Lumis Partners</p>
+
+    <div class="partners__viewport">
+      <div class="partners__marquee">
+        <ul class="partners__track">
+          <li class="partners__logo"><img src="icons/nvidia.svg" alt="Nvidia" width="128" height="128"></li>
+          <li class="partners__logo"><img src="icons/Pfizer_(2021) 1.svg" alt="Pfizer" width="126" height="52"></li>
+          <li class="partners__logo"><img src="icons/google-wordmark.svg" alt="Google" width="122" height="122"></li>
+          <li class="partners__logo"><img src="icons/Layer_1.svg" alt="CeraVe" width="142" height="50"></li>
+          <li class="partners__logo"><img src="icons/SOM_horiz_Web_Color_LG 1.svg" alt="Stanford Medicine" width="335" height="78.5"></li>
+          <li class="partners__logo"><img src="icons/Layer_1-1.svg" alt="La Roche-Posay" width="157" height="64"></li>
+        </ul>
+        <ul class="partners__track" aria-hidden="true">
+          <li class="partners__logo"><img src="icons/nvidia.svg" alt="" width="128" height="128"></li>
+          <li class="partners__logo"><img src="icons/Pfizer_(2021) 1.svg" alt="" width="126" height="52"></li>
+          <li class="partners__logo"><img src="icons/google-wordmark.svg" alt="" width="122" height="122"></li>
+          <li class="partners__logo"><img src="icons/Layer_1.svg" alt="" width="142" height="50"></li>
+          <li class="partners__logo"><img src="icons/SOM_horiz_Web_Color_LG 1.svg" alt="" width="335" height="78.5"></li>
+          <li class="partners__logo"><img src="icons/Layer_1-1.svg" alt="" width="157" height="64"></li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <!-- Second hero state: a full-screen expansion of whichever portrait was
        clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662).

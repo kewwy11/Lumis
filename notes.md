@@ -169,6 +169,68 @@ stop advancing instead of finishing alongside the call that outran it.
 Verified via browser automation (see quirks below — the mid-flight
 cancellation case only visibly resolves once something forces a paint).
 
+## Partners strip
+
+A continuous, edge-fading horizontal marquee of partner logos sitting below
+hero1 — "entering and coming out of a portal," per the Figma reference
+(node `2323:1094`) and a local mockup screenshot. Its own file
+(`partners.css`, linked after `style.css`), per the "split as you go"
+convention for new sections — no JS needed, it's pure CSS.
+
+- **Heading**: "Lumis Partners", plain centered label (`--grey-400`, 20px,
+  normal weight/line-height — same recipe as `.hero__subtitle`). Figma
+  originally specced a blue "Our Partners" pill badge for this section;
+  when the design was later updated, the pill was dropped in favor of this
+  plain label, so `.partners__badge`/`.partners__badge-dot` were replaced
+  by `.partners__heading` rather than kept alongside it.
+- **Logos**: Nvidia, Pfizer, Google, CeraVe, Stanford Medicine,
+  La Roche-Posay (this order, per the updated Figma) — sized to each
+  logo's Figma-specified box rather than its raw SVG intrinsic size, via
+  the `width`/`height` HTML attributes on each `<img>` (Nvidia 128×128,
+  Pfizer 126×52, Google 122×122, CeraVe 142×50, Stanford 335×78.5,
+  La Roche-Posay 157×64) — sourced from `icons/`.
+- **Loop mechanism**: two identical `<ul>` tracks placed side by side
+  (`.partners__marquee`, `width: max-content`), animated as one unit via
+  `translateX(0 → -50%)`. Since the tracks are equal width, -50% of the
+  pair lands exactly at the start of the second track, so the loop repeats
+  with no visible seam. Only the first track carries real `alt` text; the
+  second is `aria-hidden="true"` with empty `alt`s — it exists purely to
+  fill in behind the first as it scrolls off.
+- **Portal fade**: `.partners__viewport` clips to its own width (not the
+  raw browser viewport — `.partners` itself is capped at the site's usual
+  1512px frame) and masks its edges with a `linear-gradient` (`mask-image`/
+  `-webkit-mask-image`), fading logos in/out as they cross the edge.
+- **Seam-math gotcha**: the trailing gap between the two tracks has to live
+  on `.partners__track` (`padding: 0 2rem 0 0`) rather than on
+  `.partners__marquee` (`gap`) — a gap on the marquee would only count half
+  that space towards each 50%, landing the loop 16px short and causing a
+  visible jump. This was caught in review before ever being tested live.
+- **Sizing-override gotcha (real bug, caught via live pixel measurement
+  after the Figma update asked for per-logo resizing)**: `.partners__logo
+  img` had `width: auto; height: auto;` to counter the global `img {
+  max-width: 100% }` reset — but *any* author CSS touching width/height
+  (even to `auto`) overrides the HTML `width`/`height` attribute hints
+  entirely, so every logo was silently rendering at its own SVG's
+  intrinsic size regardless of what the attributes said. Harmless while
+  the attributes happened to match intrinsic size; became a real bug once
+  the updated design asked for different (smaller, more uniform) boxes per
+  logo. Fixed by dropping `width`/`height` from that rule entirely — with
+  only `max-width: none` left, the browser falls back to each `<img>`'s
+  own `width`/`height` attributes as intended.
+- **Eager-loading gotcha (real bug, caught via live pixel measurement)**:
+  the logo `<img>`s originally had `loading="lazy"`, which is the wrong
+  default for a marquee — "offscreen" is temporary and expected to become
+  visible by design, so lazy-loading caused genuinely asymmetric track
+  widths (some images still `complete: false` seconds after load) which
+  broke the seam math (`-50%` no longer landed exactly at the second
+  track's start) and would have caused visible pop-in as images scrolled
+  into view. Removed `loading="lazy"` from all 12 `<img>`s; verified after
+  the fix that both tracks measure pixel-identical and `marqueeWidth / 2 ===
+  track width` exactly.
+- Respects `prefers-reduced-motion`: animation stops entirely and the
+  `aria-hidden` duplicate track is hidden, leaving one static, accessible
+  row of logos.
+
 ## Known quirks / gotchas (not real bugs)
 
 - Chrome tabs driven by automation throttle `setTimeout`/`rAF`/CSS
