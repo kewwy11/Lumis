@@ -1,0 +1,113 @@
+# Lumis — build notes
+
+Static HTML/CSS/JS marketing site for Lumis (skincare-analysis brand). No
+build step, no framework. Figma is the visual source of truth throughout —
+every layout, spacing, and content decision traces back to a Figma node.
+
+## Structure
+
+- `index.html` — all markup (hero1 + hero2, both always in the DOM)
+- `style.css` — all styles
+- `script.js` — three independent, self-invoking IIFEs (see below)
+- `images/`, `icons/` — assets, organized by portrait position / icon name
+
+## Hero 1 — landing hero
+
+Nav, headline, subtitle, two download CTAs, and a ring of 6 portraits
+(top-left/top-right/left/right/bottom-left/bottom-right).
+
+- **Responsive system**: mobile flows normally; `@media (min-width: 940px)`
+  switches to an absolutely-positioned "Figma ring" layout scaled by
+  `html { font-size: clamp(10px, 1.0582vw, 16px) }` (16px = 1512px frame width).
+- **Portrait entrance**: staggered fade+rise on page load, eased with a
+  gentle overshoot (`cubic-bezier(0.34, 1.56, 0.64, 1)`), one portrait every
+  600ms.
+- **Automatic skin-scan**: every 10–15s, a glowing sweep line crosses a
+  random portrait (never the same one twice), then holds 2–3 annotation
+  markers for 2s before fading. Only one portrait animates at a time.
+- **Hover interaction**: lifts the portrait, stops every other portrait's
+  animation, re-runs its own scan, then slides an info card out — direction
+  (left/right) is fixed per position, not "toward center."
+- **Rotating pill**: chip text cycles through 6 Figma-exact words/colors
+  every 15s, with a per-character vertical "roll" (Framer-style), staggered
+  left-to-right on exit and entry.
+- **Button hover**: CTA labels roll vertically on hover (same per-character
+  technique as the pill).
+- All animated features respect `prefers-reduced-motion`.
+
+## Hero 2 — full-screen analysis view
+
+Opened by clicking any portrait. Fixed 1512×982px canvas, scaled via
+`transform: scale(min(1, 100vw/1512px, 100vh/982px))` so it always fits the
+viewport with **no scrolling**, independent of hero1's rem/clamp system.
+
+- Full-screen photo background (`object-fit: cover`, per-portrait
+  `object-position` so the face doesn't jump), dark scrim, nav with white
+  logo variant, close button, "Get started" CTA.
+- 3 annotation markers per portrait, positioned in plain px within the fixed
+  frame — one "featured" condition (matching the hover-card data) plus two
+  more extending the same finding across nearby facial areas.
+- Bottom row: name dropdown (age, dominant condition, confidence, other
+  conditions), skin-type dropdown (6-option list), and a condition/severity
+  stat — evenly spaced (`justify-content: space-between; padding: 0 80px`).
+- 6-bar side nav that tracks which portrait is open, synced to reading
+  order (top-left → top-right → left → right → bottom-left → bottom-right).
+- All content (names, ages, skin types, confidence %, marker positions) is
+  real, per-portrait data for all 6 people (Deborah, Marcus, Aisha, Naledi,
+  Simone, Mei), pixel-verified against exported Figma reference screenshots.
+
+### Shared-element entrance transition (most recent work)
+
+Clicking a portrait doesn't just reveal hero2 — the clicked portrait's
+image physically grows into the full-screen photo, styled after React/
+Framer Motion's `layoutId` shared-layout pattern, hand-rolled as a manual
+FLIP (First-Last-Invert-Play) since this is vanilla JS.
+
+Sequence, all timed from a single click timestamp (not chained/sequential):
+
+1. **Click** → internal state machine moves `IDLE → OPENING_ANALYSIS`.
+   Dispatches a `lumis:analysis-opening` custom event that the scan/hover
+   IIFE and the pill-rotation IIFE listen for, so both freeze immediately
+   (auto-scan stops, hover is disabled, pill stops cycling words). The
+   state guard also blocks clicking any other portrait, or re-triggering,
+   until the transition finishes.
+2. **0–150ms**: clicked portrait does a small "press" acknowledgment
+   (`translateY(-4px) scale(1.01)`).
+3. **~120ms**: the other 5 portraits fade + settle down 8px (400ms,
+   ease-out).
+4. **~150ms**: the central hero content (pill, headline, subtitle, CTAs)
+   fades + lifts -12px as one unit (380ms, ease-out).
+5. **~0–500ms**: the page background itself gradually shifts white → dark
+   (`body.is-opening-analysis`), so the environment darkens underneath the
+   fading elements rather than snapping.
+6. **~150–850ms**: a cloned `<img>` ("ghost") of the clicked portrait grows
+   from its exact grid position/size to full-screen (`cubic-bezier(0.22, 1,
+   0.36, 1)`, 700ms), with border-radius and `object-position` animating
+   together with the size so the crop stays consistent throughout.
+7. **~850ms+**: once the ghost lands, the real (already-populated) hero2 is
+   revealed underneath and its chrome fades in (~350ms) → state becomes
+   `ANALYSIS_ACTIVE`.
+
+Closing reverses all of it for free — removing the same CSS classes
+(`is-opening-analysis`, `is-hidden-for-analysis`) re-triggers the same
+transitions in reverse, and a `lumis:analysis-closed` event resumes the
+auto-scan and pill rotation.
+
+Cross-module coordination is done via `document.dispatchEvent(new
+CustomEvent(...))` rather than a shared global, keeping the three IIFEs
+decoupled.
+
+## Known quirks / gotchas (not real bugs)
+
+- Chrome tabs driven by automation throttle `setTimeout`/`rAF`/CSS
+  transitions when not actively painted — a forced screenshot flushes
+  state. Never indicative of a problem for real, foregrounded users.
+- `script.js` can get cached stale during dev; use
+  `fetch('script.js', {cache: 'no-store'})` + `eval()` when iterating live
+  in a browser tab instead of a hard reload.
+
+## Status as of last session
+
+Sections 2–10 of the shared-element transition spec are implemented and
+verified (no console errors, clean open/close cycles, correct per-portrait
+data on repeated opens). **Not yet committed.**
