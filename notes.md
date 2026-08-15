@@ -97,17 +97,53 @@ Cross-module coordination is done via `document.dispatchEvent(new
 CustomEvent(...))` rather than a shared global, keeping the three IIFEs
 decoupled.
 
+### Skin switch (picking a different skin type re-targets the whole person)
+
+Choosing an option in the skin-type dropdown doesn't just relabel the pill —
+it switches the full analysis to whichever of the six people that skin type
+maps to (`SKIN_OPTION_TO_KEY` in script.js; two of the six options don't
+share exact wording with any portrait's own `skinType`, so the map is
+explicit rather than derived). Sequence, once the dropdown itself has
+finished closing:
+
+1. **Annotations fade out** (250ms) — the currently-showing markers'
+   label/connector opacity 1→0, ring opacity 1→0 + scale→0.8. Since the
+   reveal-in is a forwards-filled CSS keyframe animation, a plain class
+   removal would just snap it away, so the current computed opacity/
+   transform is captured to an inline style first and *that* is what
+   transitions out.
+2. **Photo crossfades** (500ms) — `hero2__bg-frame` (a wrapper around
+   `hero2__bg` added solely for this) lets the crossfade scale/fade
+   independent of `hero2__bg`'s own cover-fit crop math. The outgoing
+   photo is a cloned snapshot of the wrapper ("ghost"); the incoming one
+   is the real wrapper, starting at scale(1.015)/opacity 0 and easing to
+   scale(1)/opacity 1.
+3. **~100ms pause**, then the same `runScan()` used on first open runs
+   again for the new person.
+
+Rapid re-selection (latest wins, never stacks): every step is gated behind
+comparing its captured `token` to the current `switchToken`, which every
+new `switchPerson()` call bumps — a superseded call's remaining steps just
+stop advancing instead of finishing alongside the call that outran it.
+Verified via browser automation (see quirks below — the mid-flight
+cancellation case only visibly resolves once something forces a paint).
+
 ## Known quirks / gotchas (not real bugs)
 
 - Chrome tabs driven by automation throttle `setTimeout`/`rAF`/CSS
   transitions when not actively painted — a forced screenshot flushes
-  state. Never indicative of a problem for real, foregrounded users.
+  state. Never indicative of a problem for real, foregrounded users. This
+  showed up concretely testing rapid skin switching: a cancelled-then-new
+  crossfade's `requestAnimationFrame` callback sat pending (ghost stuck at
+  full opacity over the new, already-loaded photo) until a screenshot
+  forced a paint, at which point it resolved correctly on the next frame.
 - `script.js` can get cached stale during dev; use
   `fetch('script.js', {cache: 'no-store'})` + `eval()` when iterating live
   in a browser tab instead of a hard reload.
 
 ## Status as of last session
 
-Sections 2–10 of the shared-element transition spec are implemented and
-verified (no console errors, clean open/close cycles, correct per-portrait
-data on repeated opens). **Not yet committed.**
+Sections 2–10 of the shared-element transition spec, and the skin-switch
+spec (annotation fade-out, photo crossfade, recognition pause, rapid-switch
+cancellation), are implemented and verified (no console errors, clean
+open/close cycles, correct per-portrait data on repeated opens).

@@ -604,6 +604,43 @@ body {
   background: var(--header);
 }
 
+.hero2__bg-frame {
+  position: absolute;
+  inset: 0;
+}
+
+/* Skin switch (script.js switchPerson/crossfadeImage): the outgoing photo
+   is a cloned snapshot of this wrapper ("ghost"), the incoming one is the
+   real wrapper — scaled/faded here, on the wrapper, so hero2__bg's own
+   cover-fit crop (top/left/width/height, different rules per breakpoint)
+   never has to know a crossfade is happening. */
+.hero2__bg-frame--ghost {
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 500ms ease-out, transform 500ms ease-out;
+}
+
+.hero2__bg-frame--ghost.hero2__bg-frame--leaving {
+  opacity: 0;
+  transform: scale(0.99);
+}
+
+.hero2__bg-frame--entering {
+  opacity: 0;
+  transform: scale(1.015);
+  transition: opacity 500ms ease-out, transform 500ms ease-out;
+}
+
+.hero2__bg-frame--entering.hero2__bg-frame--entered {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__bg-frame--ghost,
+  .hero2__bg-frame--entering { transition: none; }
+}
+
 .hero2__bg {
   position: absolute;
   top: 50%;

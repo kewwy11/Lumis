@@ -325,6 +325,9 @@
   const hero2 = document.getElementById("hero2");
   if (!hero2) return;
 
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const bgFrame = document.getElementById("hero2BgFrame");
   const bg = document.getElementById("hero2Bg");
   const nameEl = document.getElementById("hero2Name");
   const skinTypeEl = document.getElementById("hero2SkinType");
@@ -498,11 +501,25 @@
     return POSITION_CLASSES.find((key) => item.classList.contains(`gallery__item--${key}`));
   }
 
-  function populate(data) {
+  // Image loading is split out from the rest of populate() so a skin
+  // switch can drive it separately (crossfadeImage), through the same
+  // onload -> applyBgGeometry path open() uses, without also touching
+  // the text/marker fields (which a switch times differently).
+  function loadBgImage(data, onReady) {
     bg.style.objectPosition = data.objectPosition || "50% 50%"; // mobile fallback (object-fit:cover there)
-    bg.onload = () => applyBgGeometry(data);
+    let done = false;
+    const finish = () => {
+      if (done) return; // guards the (rare) case onload still fires after the bg.complete fallback below
+      done = true;
+      applyBgGeometry(data);
+      if (onReady) onReady();
+    };
+    bg.onload = finish;
     bg.src = data.image;
-    if (bg.complete) applyBgGeometry(data); // already-cached image: onload won't fire again
+    if (bg.complete) finish(); // already-cached image: onload won't fire again
+  }
+
+  function populateText(data) {
     nameEl.textContent = data.name;
     skinTypeEl.textContent = data.skinType;
     ageEl.textContent = data.age;
@@ -520,6 +537,11 @@
       root.style.setProperty("--my", marker.my);
       label.textContent = marker.label;
     });
+  }
+
+  function populate(data) {
+    loadBgImage(data);
+    populateText(data);
   }
 
   /* ---------- Dropdowns ---------- */
@@ -571,6 +593,179 @@
     return dropdowns.some(({ panel }) => !panel.hidden);
   }
 
+  /* ---------- Skin switch ---------- */
+  // Picking a skin type re-targets the whole analysis at a different one
+  // of the six people, not just the label — matching the Figma skin-type
+  // vocabulary (node 2144:11662) to a PORTRAITS key. Two options don't
+  // share exact wording with any portrait's own skinType ("Black Skin" vs
+  // Naledi's "Black skin"; "Dark Skin" has no match at all), so this map
+  // is explicit rather than derived from data.skinType.
+  const SKIN_OPTION_TO_KEY = {
+    "Olive skin": "top-left",         // Deborah Clark
+    "Milky white skin": "top-right",  // Marcuss Webb
+    "Deep brown skin": "left",        // Aisha Bello
+    "Black Skin": "right",            // Naledi Okafor
+    "Dark Skin": "bottom-left",       // Simone Tanya
+    "Bronze skin": "bottom-right",    // Mei Tanaka
+  };
+
+  const ANNOTATION_OUT_MS = 250;   // 33: current markers fade before the new person appears
+  const IMAGE_CROSSFADE_MS = 500;  // 34: old/new photo crossfade
+  const RECOGNITION_PAUSE_MS = 100; // 35: beat between the new photo landing and its scan starting
+
+  let activeKey = null;
+  // Bumped on every switchPerson() call (and on open/close); every step
+  // of an in-flight switch checks it before continuing, so item 38's
+  // "latest selection wins" falls out of that check rather than a queue —
+  // a stale switch just stops advancing itself once outrun.
+  let switchToken = 0;
+  let pendingSwitchTimers = [];
+
+  function clearPendingSwitch() {
+    pendingSwitchTimers.forEach(clearTimeout);
+    pendingSwitchTimers = [];
+  }
+
+  function cancelScanTimers() {
+    scanTimers.forEach(clearTimeout);
+    scanTimers = [];
+    hero2ScanLine.classList.remove("is-scanning");
+  }
+
+  function clearMarkerInlineStyles() {
+    markerEls.forEach(({ root }) => {
+      root.querySelectorAll(".hero2__marker-label, .hero2__marker-line, .hero2__marker-ring").forEach((el) => {
+        el.style.opacity = "";
+        el.style.transform = "";
+        el.style.transition = "";
+      });
+    });
+  }
+
+  // Fades out whichever markers are currently showing (label/connector
+  // opacity 1->0, ring opacity 1->0 + scale 1->0.8). The reveal-in itself
+  // is a CSS keyframe animation (forwards-filled), which a class removal
+  // alone would just snap away — so the current computed opacity/transform
+  // is captured to an inline style first, keeping the visual state intact
+  // for the transition that then runs on those same inline styles.
+  function fadeOutAnnotations(token) {
+    markerEls.forEach(({ root }) => {
+      if (!root.classList.contains("is-visible")) return;
+      const label = root.querySelector(".hero2__marker-label");
+      const line = root.querySelector(".hero2__marker-line");
+      const ring = root.querySelector(".hero2__marker-ring");
+
+      label.style.opacity = getComputedStyle(label).opacity;
+      line.style.opacity = getComputedStyle(line).opacity;
+      ring.style.opacity = getComputedStyle(ring).opacity;
+      ring.style.transform = getComputedStyle(ring).transform;
+
+      root.classList.remove("is-visible");
+      void root.offsetWidth; // force reflow before the inline transition below
+
+      const ease = `${ANNOTATION_OUT_MS}ms ease-in`;
+      label.style.transition = `opacity ${ease}`;
+      line.style.transition = `opacity ${ease}`;
+      ring.style.transition = `opacity ${ease}, transform ${ease}`;
+
+      requestAnimationFrame(() => {
+        if (token !== switchToken) return; // superseded by a newer switch
+        label.style.opacity = "0";
+        line.style.opacity = "0";
+        ring.style.opacity = "0";
+        ring.style.transform = "scale(0.8)";
+      });
+    });
+  }
+
+  // Crossfades hero2__bg-frame from whichever photo it currently shows to
+  // data's, per item 34: outgoing fades+settles to scale(0.99), incoming
+  // starts at scale(1.015) and eases to scale(1) — no slide, no zoom punch.
+  // Any leftover ghost from a switch this one is superseding is dropped
+  // first, and the *current* frame (not a stale mid-fade snapshot) becomes
+  // the new ghost, so a rapid re-switch always transitions from what's
+  // actually on screen toward the newest target, never stacking fades.
+  function crossfadeImage(data, token, onDone) {
+    document.querySelectorAll(".hero2__bg-frame--ghost").forEach((el) => el.remove());
+    bgFrame.classList.remove("hero2__bg-frame--entering", "hero2__bg-frame--entered");
+
+    const ghost = bgFrame.cloneNode(true);
+    ghost.removeAttribute("id");
+    const ghostImg = ghost.querySelector("img");
+    if (ghostImg) ghostImg.removeAttribute("id");
+    ghost.classList.add("hero2__bg-frame--ghost");
+    bgFrame.insertAdjacentElement("afterend", ghost);
+
+    bgFrame.classList.add("hero2__bg-frame--entering");
+
+    const abort = () => {
+      ghost.remove();
+      bgFrame.classList.remove("hero2__bg-frame--entering", "hero2__bg-frame--entered");
+    };
+
+    loadBgImage(data, () => {
+      if (token !== switchToken) return abort();
+      requestAnimationFrame(() => {
+        if (token !== switchToken) return abort();
+        ghost.classList.add("hero2__bg-frame--leaving");
+        bgFrame.classList.add("hero2__bg-frame--entered");
+        pendingSwitchTimers.push(setTimeout(() => {
+          ghost.remove();
+          bgFrame.classList.remove("hero2__bg-frame--entering", "hero2__bg-frame--entered");
+          if (token === switchToken && onDone) onDone();
+        }, IMAGE_CROSSFADE_MS));
+      });
+    });
+  }
+
+  // Full sequence for items 33-35: fade the old annotations out, crossfade
+  // to the new photo + text/markers, pause briefly, then run the same scan
+  // open() uses for a first reveal. Item 38 (rapid switching): every step
+  // re-checks `token` against `switchToken`, which a later switchPerson()
+  // call always bumps, so an outrun call simply stops advancing instead of
+  // finishing alongside whichever call superseded it.
+  function switchPerson(key) {
+    if (!PORTRAITS[key] || key === activeKey) return;
+    const data = PORTRAITS[key];
+    const token = ++switchToken;
+
+    clearPendingSwitch();
+    cancelScanTimers(); // stop any pending marker reveals from the scan being interrupted; is-visible is left for fadeOutAnnotations to animate away
+
+    if (prefersReducedMotion) {
+      clearMarkerInlineStyles();
+      markerEls.forEach(({ root }) => root.classList.remove("is-visible"));
+      activeKey = key;
+      severityBarEls.forEach((bar, i) => {
+        bar.classList.toggle("hero2__severity-bar--active", i === POSITION_CLASSES.indexOf(key));
+      });
+      populateText(data);
+      loadBgImage(data);
+      runScan();
+      return;
+    }
+
+    fadeOutAnnotations(token);
+
+    pendingSwitchTimers.push(setTimeout(() => {
+      if (token !== switchToken) return;
+      clearMarkerInlineStyles();
+
+      activeKey = key;
+      severityBarEls.forEach((bar, i) => {
+        bar.classList.toggle("hero2__severity-bar--active", i === POSITION_CLASSES.indexOf(key));
+      });
+      populateText(data);
+
+      crossfadeImage(data, token, () => {
+        pendingSwitchTimers.push(setTimeout(() => {
+          if (token !== switchToken) return;
+          runScan();
+        }, RECOGNITION_PAUSE_MS));
+      });
+    }, ANNOTATION_OUT_MS));
+  }
+
   dropdowns.forEach((entry) => {
     entry.pill.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -580,10 +775,18 @@
     });
   });
 
+  // Item 33: the switch itself only starts once the dropdown has actually
+  // closed, not on the click that chose it — DROPDOWN_CLOSE_MS matches the
+  // panel's own closing transition above.
+  let dropdownSwitchTimer = null;
+
   skinPanel.querySelectorAll("button[data-value]").forEach((option) => {
     option.addEventListener("click", () => {
-      skinTypeEl.textContent = option.dataset.value;
+      const key = SKIN_OPTION_TO_KEY[option.dataset.value];
       closeDropdowns();
+      if (!key) return;
+      clearTimeout(dropdownSwitchTimer);
+      dropdownSwitchTimer = setTimeout(() => switchPerson(key), DROPDOWN_CLOSE_MS);
     });
   });
 
@@ -664,6 +867,17 @@
     isOpen = true;
     document.dispatchEvent(new CustomEvent("lumis:analysis-opening"));
 
+    // Fresh state before this activation — cancels any skin switch left
+    // over from a previous open/close cycle (dropdown wait, in-flight
+    // fade/crossfade, or its queued scan).
+    clearTimeout(dropdownSwitchTimer);
+    switchToken++;
+    clearPendingSwitch();
+    document.querySelectorAll(".hero2__bg-frame--ghost").forEach((el) => el.remove());
+    bgFrame.classList.remove("hero2__bg-frame--entering", "hero2__bg-frame--entered");
+    clearMarkerInlineStyles();
+    activeKey = key;
+
     populate(data);
     resetScan(); // fresh state before this activation's one scan
 
@@ -706,6 +920,16 @@
     clearTimeout(iconTimer);
     closeButton.classList.remove("is-active");
     resetScan();
+
+    // Drop any skin switch left mid-flight so it can't finish into a
+    // closed/reopened panel.
+    clearTimeout(dropdownSwitchTimer);
+    switchToken++;
+    clearPendingSwitch();
+    document.querySelectorAll(".hero2__bg-frame--ghost").forEach((el) => el.remove());
+    bgFrame.classList.remove("hero2__bg-frame--entering", "hero2__bg-frame--entered");
+    clearMarkerInlineStyles();
+    activeKey = null;
   }
 
   document.querySelectorAll(".gallery__item").forEach((item) => {

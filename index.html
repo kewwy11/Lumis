@@ -313,7 +313,12 @@
          stage, so they never drift from the photo underneath, at any
          screen size. -->
     <div class="hero2__stage" id="hero2Stage">
-      <img class="hero2__bg" id="hero2Bg" src="" alt="">
+      <!-- Wrapper exists only so a skin switch can crossfade/scale the
+           photo without touching hero2__bg's own cover-fit crop math
+           (script.js's applyBgGeometry, keyed to this element's box). -->
+      <div class="hero2__bg-frame" id="hero2BgFrame">
+        <img class="hero2__bg" id="hero2Bg" src="" alt="">
+      </div>
       <span class="hero2__scan-line" id="hero2ScanLine" aria-hidden="true"></span>
 
       <div class="hero2__marker" id="hero2Marker0">
