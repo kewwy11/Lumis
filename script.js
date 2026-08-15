@@ -17,8 +17,8 @@
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const SCAN_INTERVAL_MIN = 10000;
-  const SCAN_INTERVAL_MAX = 15000;
+  const SCAN_INTERVAL_MIN = 8000;
+  const SCAN_INTERVAL_MAX = 10000;
   const MARKER_HOLD = 2000;
 
   let hoveredItem = null;
@@ -221,7 +221,7 @@
     { text: "Reviewed", theme: "reviewed" },
   ];
 
-  const ROTATE_INTERVAL = 15000;
+  const ROTATE_INTERVAL = 8000;
   const CHAR_STAGGER = 35;   // ms between each character's own start
   const CHAR_DURATION = 380; // ms — must match the .chip__char transition duration in CSS
 
@@ -942,6 +942,16 @@
   // depends on its current appearance.
   const closeButton = document.getElementById("hero2Close");
   closeButton.addEventListener("click", close);
+
+  // Logo: back to hero1, same as the X.
+  document.getElementById("hero2Logo").addEventListener("click", close);
+
+  // Side-bar indicators: click one to jump straight to that portrait's
+  // analysis — same switchPerson() the skin-type dropdown uses, so it's
+  // the same single crossfade, no stagger, no bounce.
+  severityBarEls.forEach((bar) => {
+    bar.addEventListener("click", () => switchPerson(bar.dataset.position));
+  });
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !isOpen) return;

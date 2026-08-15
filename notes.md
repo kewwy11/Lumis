@@ -18,10 +18,33 @@ Nav, headline, subtitle, two download CTAs, and a ring of 6 portraits
 
 - **Responsive system**: mobile flows normally; `@media (min-width: 940px)`
   switches to an absolutely-positioned "Figma ring" layout scaled by
-  `html { font-size: clamp(10px, 1.0582vw, 16px) }` (16px = 1512px frame width).
+  `html { font-size: clamp(10px, 1.0582vw, 16px) }` (16px = 1512px frame width) —
+  this only ever accounts for viewport *width*, unlike hero2 (below).
+- **Ring spacing** (wide layout): 48px margin above the top row, 32px
+  below the bottom row, 64px gap between each of the 3 stacked portraits
+  per side. `.stage`'s own height (934px) is *derived* from that — unlike
+  hero2's frame, it isn't pinned to the 982px Figma artboard height, since
+  48+242+64+242+64+242+32 doesn't sum to 982 (there's no portrait-size
+  change on record that would make it), so the stage was sized to fit the
+  spacing exactly rather than the other way around.
+- **Nav sized to match hero2's**: `.nav` is plain px (box *and* every
+  descendant — logo mark, toggle button, its bars) plus its own
+  `transform: scale(min(1, vw/1512, vh/982))` in the wide-layout query,
+  deliberately duplicating `.hero2__frame`'s exact formula so the two navs
+  render at the identical size on any viewport. Without this, hero1's nav
+  only ever shrank for width (the root font-size clamp above), so on a
+  short/wide window — where hero2 *also* shrinks for height, since it can
+  never scroll — hero1's nav stayed visibly larger. Fixing this surfaced a
+  real bug on the hero2 side too: `.hero2__logo img` and
+  `.hero2__close-bars` were still in rem, so under `.hero2__frame`'s
+  transform they were shrinking *twice* (once via rem/root-font-size, once
+  via the frame's own scale) — landing smaller than the pill/button around
+  them. Converted to px like the rest of that frame already was.
 - **Portrait entrance**: staggered fade+rise on page load, eased with a
-  gentle overshoot (`cubic-bezier(0.34, 1.56, 0.64, 1)`), one portrait every
-  600ms.
+  gentle overshoot (`cubic-bezier(0.34, 1.56, 0.64, 1)`), cascading in
+  100ms apart (was 600ms), each one taking 1.5s to settle (was 0.8s) — the
+  fast stagger against the slower individual duration means several are
+  mid-animation at once rather than one at a time.
 - **Automatic skin-scan**: every 10–15s, a glowing sweep line crosses a
   random portrait (never the same one twice), then holds 2–3 annotation
   markers for 2s before fading. Only one portrait animates at a time.
@@ -31,8 +54,11 @@ Nav, headline, subtitle, two download CTAs, and a ring of 6 portraits
 - **Rotating pill**: chip text cycles through 6 Figma-exact words/colors
   every 15s, with a per-character vertical "roll" (Framer-style), staggered
   left-to-right on exit and entry.
-- **Button hover**: CTA labels roll vertically on hover (same per-character
-  technique as the pill).
+- **Button hover**: CTA labels roll vertically on hover (`.button__label`/
+  `-track`/`-text`, two stacked copies of the label sliding up one line —
+  see the comment beside `.button__label` in style.css). hero2's own
+  "Get started" CTA reuses these exact classes rather than its own copy,
+  so `.hero2__cta:hover` triggers the identical roll.
 - All animated features respect `prefers-reduced-motion`.
 
 ## Hero 2 — full-screen analysis view
@@ -43,15 +69,27 @@ viewport with **no scrolling**, independent of hero1's rem/clamp system.
 
 - Full-screen photo background (`object-fit: cover`, per-portrait
   `object-position` so the face doesn't jump), dark scrim, nav with white
-  logo variant, close button, "Get started" CTA.
+  logo variant, close button, "Get started" CTA. Nav and CTA sit 48px from
+  the frame's top edge, the footer row 32px from the bottom — unlike
+  hero1, the 982px frame itself is untouched here; only those two rows'
+  offsets changed.
 - 3 annotation markers per portrait, positioned in plain px within the fixed
   frame — one "featured" condition (matching the hover-card data) plus two
   more extending the same finding across nearby facial areas.
 - Bottom row: name dropdown (age, dominant condition, confidence, other
   conditions), skin-type dropdown (6-option list), and a condition/severity
   stat — evenly spaced (`justify-content: space-between; padding: 0 80px`).
+  Both dropdown panels open with a combined `scaleY` grow + `clip-path:
+  inset()` wipe (bottom-to-top, `transform-origin: bottom center`) so the
+  content reads as emerging up out of the pill, not just fading in above
+  it — the clip starts collapsed to a zero-height sliver right at the
+  pill's edge and wipes open in step with the scale.
 - 6-bar side nav that tracks which portrait is open, synced to reading
-  order (top-left → top-right → left → right → bottom-left → bottom-right).
+  order (top-left → top-right → left → right → bottom-left → bottom-right)
+  — and doubles as a jump-to-portrait control: clicking a bar calls the
+  same `switchPerson()` the skin-type dropdown uses, so it's the same
+  single crossfade (no stagger, no bounce). The logo button does the same
+  as the X (`close()`) — back to hero1.
 - All content (names, ages, skin types, confidence %, marker positions) is
   real, per-portrait data for all 6 people (Deborah, Marcus, Aisha, Naledi,
   Simone, Mei), pixel-verified against exported Figma reference screenshots.

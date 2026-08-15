@@ -107,14 +107,21 @@ body {
   justify-content: center;
 }
 
+/* Plain px throughout this nav (box + every descendant below), same
+   principle as hero2__frame: a single transform:scale (wide-layout media
+   query, further down) shrinks the whole thing as one unit to match
+   hero2__nav's own size exactly. rem here would double-shrink under that
+   transform, since rem is also already shrinking hero1's width-only
+   root-font clamp — the bug .hero2__logo img/.hero2__close-bars had
+   before their own fix. */
 .nav {
   display: flex;
   align-items: center;
-  gap: 0.625rem;              /* 10px */
-  width: 16.8125rem;          /* 269px */
-  height: 3.5rem;             /* 56px  */
-  padding: 0.3125rem 0.3125rem 0.3125rem 1rem;  /* 5px / 16px left */
-  border-radius: 0.625rem;    /* 10px */
+  gap: 10px;
+  width: 269px;
+  height: 56px;
+  padding: 5px 5px 5px 16px;
+  border-radius: 10px;
   background: var(--blue-50);
 }
 
@@ -127,8 +134,8 @@ body {
 }
 
 .nav__mark {
-  width: 6.1875rem;           /* 99px */
-  height: 1.5rem;             /* 24.007px */
+  width: 99px;
+  height: 24px;
   flex-shrink: 0;
 }
 
@@ -138,11 +145,11 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 3rem;                /* 48px */
+  width: 48px;
   height: 100%;
-  padding: 0.625rem;          /* 10px */
+  padding: 10px;
   border: 0;
-  border-radius: 0.5rem;      /* 8px */
+  border-radius: 8px;
   background: var(--blue);
   cursor: pointer;
 }
@@ -150,8 +157,8 @@ body {
 .nav__bars {
   position: relative;
   display: block;
-  width: 1.75rem;             /* 28px */
-  height: 0.75rem;            /* 12px: spans both rules, so the pair centers as one unit */
+  width: 28px;
+  height: 12px;               /* spans both rules, so the pair centers as one unit */
 }
 
 .nav__bars::before,
@@ -304,7 +311,8 @@ body {
   transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.button:hover .button__label-track {
+.button:hover .button__label-track,
+.hero2__cta:hover .button__label-track {
   transform: translateY(-50%);
 }
 
@@ -350,25 +358,27 @@ body {
   height: 100%;
   object-fit: cover;
   background: var(--blue-50); /* holds the shape while the photo loads */
-  animation: portrait-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: portrait-in 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* Entrance: a calm fade + 20px rise, staggered in reading order (top row,
-   middle row, bottom row) so each portrait settles just as the last
-   one is nearly done — never more than one moving at a time. The
-   ease-out-back curve ramps in gently, then lets the rise overshoot
-   by a hair before settling — a soft bounce rather than a hard stop. */
+   middle row, bottom row) as a quick cascade — close enough together that
+   several are settling at once, rather than one at a time with a pause
+   between. The ease-out-back curve ramps in gently, then lets the rise
+   overshoot by a hair before settling — a soft bounce rather than a hard
+   stop. All six are on screen well under 1s after load; the old 600ms
+   stagger left the last portrait not even starting until 3s in. */
 @keyframes portrait-in {
   from { opacity: 0; transform: translateY(1.25rem); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .gallery__item:nth-child(1) .card { animation-delay: 0ms; }
-.gallery__item:nth-child(2) .card { animation-delay: 600ms; }
-.gallery__item:nth-child(3) .card { animation-delay: 1200ms; }
-.gallery__item:nth-child(4) .card { animation-delay: 1800ms; }
-.gallery__item:nth-child(5) .card { animation-delay: 2400ms; }
-.gallery__item:nth-child(6) .card { animation-delay: 3000ms; }
+.gallery__item:nth-child(2) .card { animation-delay: 100ms; }
+.gallery__item:nth-child(3) .card { animation-delay: 200ms; }
+.gallery__item:nth-child(4) .card { animation-delay: 300ms; }
+.gallery__item:nth-child(5) .card { animation-delay: 400ms; }
+.gallery__item:nth-child(6) .card { animation-delay: 500ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .card { animation: none; }
@@ -716,8 +726,16 @@ body {
   align-items: center;
   height: 3.5rem;
   padding-left: 1rem;
+  border: 0;
   border-radius: 0.625rem;
   background: rgba(15, 23, 42, 0.3);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.hero2__logo:hover,
+.hero2__logo:focus-visible {
+  background: rgba(15, 23, 42, 0.5);
 }
 
 .hero2__logo img {
@@ -767,11 +785,11 @@ body {
 .hero2__close-bars::after { bottom: 0; }
 
 .hero2__close.is-active .hero2__close-bars::before {
-  transform: translateY(0.3125rem) rotate(45deg);    /* +5px: half the 10px gap */
+  transform: translateY(5px) rotate(45deg);    /* half the 10px gap */
 }
 
 .hero2__close.is-active .hero2__close-bars::after {
-  transform: translateY(-0.3125rem) rotate(-45deg);  /* -5px */
+  transform: translateY(-5px) rotate(-45deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -851,8 +869,13 @@ body {
 /* ---------- Dropdown panels ---------- */
 /* Opens upward from the chip (see the desktop position:absolute rule
    further down) — transform-origin sits at the bottom edge, closest to
-   the pill, so scaleY grows away from it. Opening (280ms, growing open)
-   and closing (200ms, settling back toward the chip) land on different
+   the pill, so scaleY grows away from it. The clip-path is what actually
+   sells "emerging from inside the pill": clipped away entirely at rest
+   (inset(100% ...) leaves a zero-height sliver at the very bottom, right
+   where the pill is), then wiped open bottom-to-top in step with the
+   scaleY grow, so the content reads as rising up out of the pill rather
+   than just fading into place above it. Opening (280ms, growing open) and
+   closing (200ms, settling back toward the chip) land on different
    targets, so they're separate state classes instead of one transition
    played in reverse. */
 .hero2__name-panel,
@@ -861,7 +884,8 @@ body {
   overflow: hidden;
   opacity: 0;
   transform: scaleY(0.96) translateY(4px);
-  transition: opacity 280ms ease-out, transform 280ms ease-out;
+  clip-path: inset(100% 0 0 0);
+  transition: opacity 280ms ease-out, transform 280ms ease-out, clip-path 280ms ease-out;
   pointer-events: none;
 }
 
@@ -869,6 +893,7 @@ body {
 .hero2__dropdown.is-open .hero2__skin-panel {
   opacity: 1;
   transform: scaleY(1) translateY(0);
+  clip-path: inset(0 0 0 0);
   pointer-events: auto;
 }
 
@@ -876,7 +901,8 @@ body {
 .hero2__dropdown.is-closing .hero2__skin-panel {
   opacity: 0;
   transform: scaleY(0.97) translateY(3px);
-  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  clip-path: inset(100% 0 0 0);
+  transition: opacity 200ms ease-out, transform 200ms ease-out, clip-path 200ms ease-out;
 }
 
 .hero2__name-panel {
@@ -1109,12 +1135,26 @@ body {
 .hero2__severity-bar {
   width: 1.75rem;          /* 28px */
   height: 0.25rem;
+  padding: 0;
+  border: 0;
   border-radius: 0.125rem;
   background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.hero2__severity-bar:hover,
+.hero2__severity-bar:focus-visible {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .hero2__severity-bar--active {
   width: 1.75rem;
+  background: var(--white);
+}
+
+.hero2__severity-bar--active:hover,
+.hero2__severity-bar--active:focus-visible {
   background: var(--white);
 }
 
@@ -1130,7 +1170,10 @@ body {
 
   .stage {
     position: relative;
-    height: 61.375rem;        /* 982px */
+    /* 934px: derived from the ring below, not a fixed Figma frame height
+       like hero2's — 48px top margin + 3×242px portraits + 2×64px gaps +
+       32px bottom margin. */
+    height: 58.375rem;
     padding: 0;
   }
 
@@ -1143,10 +1186,22 @@ body {
   }
 
   .masthead {
-    top: 4rem;                /* y 64  */
+    top: 3rem;                /* y 48 */
     left: 50%;
     transform: translateX(-50%);
     display: block;
+  }
+
+  /* Matches hero2__frame's own scale factor exactly (min(1, vw/1512,
+     vh/982)), so the two navs render at the same size on any viewport —
+     hero1's own scaling (the root font-size clamp above) only accounts
+     for width, so on a short/wide window it stays larger than hero2's
+     nav, which also shrinks for height. transform-origin sits top-centre
+     so it shrinks in place under .masthead's already-centred position
+     rather than drifting off it. */
+  .nav {
+    transform: scale(min(1, 100vw / 1512px, 100vh / 982px));
+    transform-origin: top center;
   }
 
   /* ---------- Message block: x 471.5, centred vertically, 568 wide ---------- */
@@ -1183,12 +1238,15 @@ body {
     aspect-ratio: auto;
   }
 
-  .gallery__item--top-left     { top: 4rem;        left: 20.3042%; }  /* 307, 64  */
-  .gallery__item--top-right    { top: 4rem;        left: 65.8069%; }  /* 995, 64  */
-  .gallery__item--left         { top: 23.3125rem;  left: 5.2910%;  }  /*  80, 373 */
-  .gallery__item--right        { top: 23.3125rem;  left: 80.8862%; }  /* 1223, 373 */
-  .gallery__item--bottom-left  { top: 43.1875rem;  left: 20.3042%; }  /* 307, 691 */
-  .gallery__item--bottom-right { top: 43.1875rem;  left: 65.8069%; }  /* 995, 691 */
+  /* Vertical: 48px top/bottom margin, 64px gap between each of the 3
+     stacked portraits per side (48 + 242 + 64 + 242 + 64 + 242 + 48 =
+     950, .stage's height above). Horizontal percentages unchanged. */
+  .gallery__item--top-left     { top: 3rem;        left: 20.3042%; }  /* 307, 48  */
+  .gallery__item--top-right    { top: 3rem;        left: 65.8069%; }  /* 995, 48  */
+  .gallery__item--left         { top: 22.125rem;   left: 5.2910%;  }  /*  80, 354 */
+  .gallery__item--right        { top: 22.125rem;   left: 80.8862%; }  /* 1223, 354 */
+  .gallery__item--bottom-left  { top: 41.25rem;    left: 20.3042%; }  /* 307, 660 */
+  .gallery__item--bottom-right { top: 41.25rem;    left: 65.8069%; }  /* 995, 660 */
 
   .gallery__item:hover { z-index: 10; }  /* lifts the whole item (photo + card) above its neighbours */
 
@@ -1246,7 +1304,7 @@ body {
 
   .hero2__nav {
     position: absolute;
-    top: 64px;
+    top: 48px;
     left: 50%;
     transform: translateX(-50%);
     width: 269px;
@@ -1263,14 +1321,29 @@ body {
     background: none;
   }
 
+  /* .hero2__frame's own transform:scale already shrinks everything inside
+     it together as one unit — these were still in rem, so they were also
+     shrinking a second time via the root font-size clamp (which exists
+     for hero1's width-only scaling), landing smaller than the rest of the
+     nav around them. Plain px, like the rest of this frame, fixes it. */
+  .hero2__logo img {
+    width: 99px;
+    height: 24px;
+  }
+
   .hero2__close {
     width: 48px;
     height: 46px;
   }
 
+  .hero2__close-bars {
+    width: 28px;
+    height: 12px;
+  }
+
   .hero2__cta {
     position: absolute;
-    top: 64px;
+    top: 48px;              /* level with .hero2__nav */
     left: calc(83.33% + 16px);
     align-self: auto;
   }
@@ -1324,7 +1397,7 @@ body {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 49px;              /* bottom row sits 933px down of the 982px frame */
+    bottom: 32px;              /* bottom row sits 950px down of the 982px frame */
     margin-top: 0;
     flex-direction: row;
     justify-content: space-between;

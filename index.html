@@ -342,23 +342,33 @@
 
     <div class="hero2__frame">
       <header class="hero2__nav">
-        <span class="hero2__logo">
+        <button class="hero2__logo" type="button" id="hero2Logo" aria-label="Back to home">
           <img src="icons/lumislogo-white.svg" alt="Lumis" width="99" height="24">
-        </span>
+        </button>
         <button class="hero2__close" type="button" id="hero2Close" aria-label="Close analysis view">
           <span class="hero2__close-bars" aria-hidden="true"></span>
         </button>
       </header>
 
-      <a class="hero2__cta" href="#">Get started</a>
+      <a class="hero2__cta" href="#">
+        <span class="button__label">
+          <span class="button__label-track">
+            <span class="button__label-text">Get started</span>
+            <span class="button__label-text" aria-hidden="true">Get started</span>
+          </span>
+        </span>
+      </a>
 
-      <div class="hero2__severity" id="hero2Severity" aria-hidden="true">
-        <span class="hero2__severity-bar"></span>
-        <span class="hero2__severity-bar"></span>
-        <span class="hero2__severity-bar"></span>
-        <span class="hero2__severity-bar"></span>
-        <span class="hero2__severity-bar"></span>
-        <span class="hero2__severity-bar"></span>
+      <!-- One bar per portrait, same reading order as PORTRAITS in
+           script.js (top-left, top-right, left, right, bottom-left,
+           bottom-right) — switchPerson() keys off that same order. -->
+      <div class="hero2__severity" id="hero2Severity">
+        <button type="button" class="hero2__severity-bar" data-position="top-left" aria-label="View Deborah Clark's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="top-right" aria-label="View Marcuss Webb's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="left" aria-label="View Aisha Bello's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="right" aria-label="View Naledi Okafor's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="bottom-left" aria-label="View Simone Tanya's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="bottom-right" aria-label="View Mei Tanaka's analysis"></button>
       </div>
 
       <div class="hero2__footer">
