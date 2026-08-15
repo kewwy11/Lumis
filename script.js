@@ -523,35 +523,60 @@
   }
 
   /* ---------- Dropdowns ---------- */
+  // Open and close are asymmetric (280ms growing open vs. 200ms settling
+  // shut, different scaleY/translateY targets), so each is its own state
+  // rather than one transition played in reverse — see style.css for the
+  // is-open/is-closing rules this toggles. .hero2__dropdown carries the
+  // state class; CSS keys the panel, its options, and the chevron off it.
   const namePill = document.getElementById("hero2NamePill");
   const namePanel = document.getElementById("hero2NamePanel");
   const skinPill = document.getElementById("hero2SkinTypePill");
   const skinPanel = document.getElementById("hero2SkinPanel");
   const dropdowns = [
-    { pill: namePill, panel: namePanel },
-    { pill: skinPill, panel: skinPanel },
+    { wrapper: document.getElementById("hero2NameDropdown"), pill: namePill, panel: namePanel },
+    { wrapper: document.getElementById("hero2SkinDropdown"), pill: skinPill, panel: skinPanel },
   ];
+  const DROPDOWN_CLOSE_MS = 200;
+  const closeTimers = new Map();
+
+  function openDropdown(entry) {
+    clearTimeout(closeTimers.get(entry.wrapper));
+    closeTimers.delete(entry.wrapper);
+    entry.wrapper.classList.remove("is-closing");
+    entry.panel.hidden = false;
+    void entry.panel.offsetWidth; // force reflow so the closed->open transition actually runs
+    requestAnimationFrame(() => {
+      entry.wrapper.classList.add("is-open");
+    });
+    entry.pill.setAttribute("aria-expanded", "true");
+  }
+
+  function closeDropdown(entry) {
+    if (!entry.wrapper.classList.contains("is-open")) return;
+    entry.wrapper.classList.remove("is-open");
+    entry.wrapper.classList.add("is-closing");
+    entry.pill.setAttribute("aria-expanded", "false");
+    const timer = setTimeout(() => {
+      entry.wrapper.classList.remove("is-closing");
+      entry.panel.hidden = true;
+    }, DROPDOWN_CLOSE_MS);
+    closeTimers.set(entry.wrapper, timer);
+  }
 
   function closeDropdowns() {
-    dropdowns.forEach(({ pill, panel }) => {
-      panel.hidden = true;
-      pill.setAttribute("aria-expanded", "false");
-    });
+    dropdowns.forEach(closeDropdown);
   }
 
   function anyDropdownOpen() {
     return dropdowns.some(({ panel }) => !panel.hidden);
   }
 
-  dropdowns.forEach(({ pill, panel }) => {
-    pill.addEventListener("click", (event) => {
+  dropdowns.forEach((entry) => {
+    entry.pill.addEventListener("click", (event) => {
       event.stopPropagation();
-      const isOpen = !panel.hidden;
+      const isOpen = entry.wrapper.classList.contains("is-open");
       closeDropdowns();
-      if (!isOpen) {
-        panel.hidden = false;
-        pill.setAttribute("aria-expanded", "true");
-      }
+      if (!isOpen) openDropdown(entry);
     });
   });
 

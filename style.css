@@ -798,14 +798,50 @@ body {
 }
 
 .hero2__chevron img {
-  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+  transition: transform 250ms ease;
 }
 
-.hero2__pill[aria-expanded="true"] .hero2__chevron img {
+.hero2__dropdown.is-open .hero2__chevron img {
   transform: rotate(180deg);
 }
 
+.hero2__dropdown.is-closing .hero2__chevron img {
+  transform: rotate(0deg);
+  transition: transform 200ms ease;
+}
+
 /* ---------- Dropdown panels ---------- */
+/* Opens upward from the chip (see the desktop position:absolute rule
+   further down) — transform-origin sits at the bottom edge, closest to
+   the pill, so scaleY grows away from it. Opening (280ms, growing open)
+   and closing (200ms, settling back toward the chip) land on different
+   targets, so they're separate state classes instead of one transition
+   played in reverse. */
+.hero2__name-panel,
+.hero2__skin-panel {
+  transform-origin: bottom center;
+  overflow: hidden;
+  opacity: 0;
+  transform: scaleY(0.96) translateY(4px);
+  transition: opacity 280ms ease-out, transform 280ms ease-out;
+  pointer-events: none;
+}
+
+.hero2__dropdown.is-open .hero2__name-panel,
+.hero2__dropdown.is-open .hero2__skin-panel {
+  opacity: 1;
+  transform: scaleY(1) translateY(0);
+  pointer-events: auto;
+}
+
+.hero2__dropdown.is-closing .hero2__name-panel,
+.hero2__dropdown.is-closing .hero2__skin-panel {
+  opacity: 0;
+  transform: scaleY(0.97) translateY(3px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
 .hero2__name-panel {
   margin-top: 0.625rem;
   padding: 1rem 1rem 0.625rem;
@@ -813,8 +849,28 @@ body {
   background: rgba(15, 23, 42, 0.3);
 }
 
-.hero2__name-row { padding-bottom: 1rem; }
+/* Each row rises in on its own, 60ms after the panel starts, nearest
+   the chip outward (bottom row first) — the panel's overflow:hidden
+   clips them mid-slide. Closing collapses the panel as one piece, so
+   rows only need an "open" target, not a reverse animation of their own. */
+.hero2__name-row {
+  padding-bottom: 1rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 220ms ease-out, transform 220ms ease-out;
+}
 .hero2__name-row:last-child { padding-bottom: 0; }
+
+.hero2__dropdown.is-open .hero2__name-row,
+.hero2__dropdown.is-closing .hero2__name-row {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero2__name-row:nth-last-child(1) { transition-delay: 60ms; }
+.hero2__name-row:nth-last-child(2) { transition-delay: 95ms; }
+.hero2__name-row:nth-last-child(3) { transition-delay: 130ms; }
+.hero2__name-row:nth-last-child(4) { transition-delay: 165ms; }
 
 .hero2__name-label {
   margin: 0 0 0.625rem;
@@ -837,6 +893,26 @@ body {
   background: rgba(15, 23, 42, 0.3);
 }
 
+/* Same nearest-the-chip-outward stagger as the name panel's rows. */
+.hero2__skin-panel li {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 220ms ease-out, transform 220ms ease-out;
+}
+
+.hero2__dropdown.is-open .hero2__skin-panel li,
+.hero2__dropdown.is-closing .hero2__skin-panel li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero2__skin-panel li:nth-last-child(1) { transition-delay: 60ms; }
+.hero2__skin-panel li:nth-last-child(2) { transition-delay: 95ms; }
+.hero2__skin-panel li:nth-last-child(3) { transition-delay: 130ms; }
+.hero2__skin-panel li:nth-last-child(4) { transition-delay: 165ms; }
+.hero2__skin-panel li:nth-last-child(5) { transition-delay: 200ms; }
+.hero2__skin-panel li:nth-last-child(6) { transition-delay: 235ms; }
+
 .hero2__skin-panel button {
   display: block;
   width: 100%;
@@ -855,6 +931,16 @@ body {
 .hero2__skin-panel button:hover,
 .hero2__skin-panel button:focus-visible {
   background: rgba(15, 23, 42, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero2__chevron img,
+  .hero2__name-panel,
+  .hero2__skin-panel,
+  .hero2__name-row,
+  .hero2__skin-panel li {
+    transition: none;
+  }
 }
 
 .hero2__stat {
