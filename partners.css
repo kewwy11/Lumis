@@ -21,7 +21,7 @@
 /* Same recipe as .hero__subtitle: grey-400, normal line-height, no extra styling. */
 .partners__heading {
   margin: 0;
-  color: var(--grey-400);
+  color: var(--grey-500);
   font-size: 1.25rem;         /* 20px */
   font-weight: 400;
   line-height: normal;
@@ -61,9 +61,9 @@
 .partners__track {
   display: flex;
   align-items: center;
-  gap: 2rem;                 /* 32px, between logos within one track */
+  gap: 3rem;                 /* 48px, between logos within one track */
   margin: 0;
-  padding: 0 2rem 0 0;
+  padding: 0 3rem 0 0;       /* trailing 48px, matching the gap above — see note by .partners__marquee */
   list-style: none;
 }
 
