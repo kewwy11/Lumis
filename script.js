@@ -934,8 +934,18 @@
 
   document.querySelectorAll(".gallery__item").forEach((item) => {
     const trigger = item.querySelector(".card");
-    if (!trigger) return;
-    trigger.addEventListener("click", () => open(item));
+    if (trigger) trigger.addEventListener("click", () => open(item));
+
+    // The hover card's "View analysis" link opens the same portrait —
+    // href="#" is just a fallback for no-JS, so the default navigation
+    // (jump to top) is prevented once open() actually runs.
+    const link = item.querySelector(".portrait-card__link");
+    if (link) {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        open(item);
+      });
+    }
   });
 
   // Always closes hero2 on click — hamburger or X, its function never

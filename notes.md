@@ -50,7 +50,10 @@ Nav, headline, subtitle, two download CTAs, and a ring of 6 portraits
   markers for 2s before fading. Only one portrait animates at a time.
 - **Hover interaction**: lifts the portrait, stops every other portrait's
   animation, re-runs its own scan, then slides an info card out — direction
-  (left/right) is fixed per position, not "toward center."
+  (left/right) is fixed per position, not "toward center." The card's "View
+  analysis" link opens that same portrait's hero2 (same `open(item)` the
+  `.card` image itself uses) — no longer `aria-hidden` now that it's a real
+  control, not just decorative.
 - **Rotating pill**: chip text cycles through 6 Figma-exact words/colors
   every 15s, with a per-character vertical "roll" (Framer-style), staggered
   left-to-right on exit and entry.
