@@ -17,8 +17,8 @@
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const SCAN_INTERVAL_MIN = 8000;
-  const SCAN_INTERVAL_MAX = 10000;
+  const SCAN_INTERVAL_MIN = 5000;
+  const SCAN_INTERVAL_MAX = 7000;
   const MARKER_HOLD = 2000;
 
   let hoveredItem = null;
@@ -221,7 +221,7 @@
     { text: "Reviewed", theme: "reviewed" },
   ];
 
-  const ROTATE_INTERVAL = 8000;
+  const ROTATE_INTERVAL = 5000;
   const CHAR_STAGGER = 35;   // ms between each character's own start
   const CHAR_DURATION = 380; // ms — must match the .chip__char transition duration in CSS
 
