@@ -10,7 +10,7 @@
 .partners {
   max-width: 1512px;
   margin-inline: auto;
-  padding: 3rem 1.25rem 2rem;   /* 48px top / 32px bottom, matches the site's hero margin rhythm */
+  padding: 3rem 1.25rem;        /* 48px top / 48px bottom — no margin between sections, each section's own padding is the only gap */
   display: flex;
   flex-direction: column;
   align-items: center;

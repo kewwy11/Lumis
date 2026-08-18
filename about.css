@@ -5,17 +5,14 @@
    .chip component for the badge pill, but is otherwise self-contained
    per section, per the "split as you go" convention (see partners.css).
 
-   Behaviour: as the section scrolls through the viewport, four
-   activation stages (the three body paragraphs + the final statement)
-   switch on cumulatively — never back off once passed, but fully
-   reversible if the user scrolls back up above a stage's threshold.
-   about.js computes a 0-1 scroll progress for the section and:
-   - toggles an `.is-active` class per paragraph at 20/40/60/80%
-     thresholds (drives the colour fade + highlight reveal below, both
-     plain CSS transitions so the reversal is "free"),
-   - writes that same progress to `--about-progress` every frame, which
-     the two photos read directly for their (continuous, not staged)
-     parallax drift.
+   Behaviour: about.js splits .about__body's paragraphs into per-word
+   spans, groups them into visual lines by offsetTop, and reveals one
+   line at a time — colour on plain words, the blue box on any
+   highlighted phrase in that line — driven by a single scroll-position
+   formula (no per-line thresholds, no time-based staggering, so it's
+   fully reversible and freezes if the user stops mid-scroll). See
+   about.js for the line-grouping and progress math; this file just
+   owns the `.word`/`.hl` visual states and their transitions.
    ============================================================= */
 
 .about {
@@ -113,7 +110,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;                      /* 32px — badge-to-heading, heading-to-paragraph, and paragraph-to-paragraph all share this one Figma-exact rhythm */
+  gap: 2.3125rem;                 /* 37px, heading-group to body text specifically — see .about__body for the (separate) paragraph-to-paragraph rhythm */
   max-width: 34.5rem;             /* 552px, the widest paragraph's designed width */
   margin-inline: auto;
   text-align: center;
@@ -126,15 +123,21 @@
   gap: 1rem;                      /* 16px, matches Figma's badge-to-heading gap */
 }
 
+.about__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;                    /* 24px between paragraphs — independent of .about__content's own (37px) gap above the whole body block */
+}
+
 .about__heading {
   margin: 0;
   color: var(--header);
-  font-size: 2.25rem;             /* 36px */
+  font-size: 3rem;             /* 48px */
   font-weight: 600;
   line-height: normal;
 }
 
-/* ---------- Paragraphs: muted grey until their stage activates ---------- */
+/* ---------- Paragraphs ---------- */
 .about__lead {
   margin: 0 auto;
   /* Deliberately narrower than .about__heading's own natural width (~30.3rem
@@ -145,14 +148,32 @@
      visually nested under it, not spilling past its edges. */
   max-width: 28rem;                /* 448px */
   width: 100%;
-  color: var(--grey-400);
   font-size: 1.25rem;              /* 20px */
   font-weight: 400;
   line-height: 1.5;                /* generous, readable leading between wrapped lines within a paragraph — the 2rem gap above/below is the separate rhythm between blocks */
-  transition: color 450ms ease;
 }
 
-.about__lead.is-active { color: var(--slate-500); }
+/* ---------- Words: the actual reveal unit ---------- */
+/* about.js splits each paragraph's text into one .word span per word
+   (leaving the surrounding whitespace as plain text so line-wrapping is
+   unaffected) and groups them into visual lines by offsetTop. Colour
+   activates per line, matching the highlight reveal below rather than
+   the old whole-paragraph fade — both are driven by the same
+   activeLineCount each scroll frame. */
+.word {
+  color: var(--grey-400);
+  transition: color 200ms ease-out;
+}
+
+.word.is-active { color: var(--slate-500); }
+
+/* Words inside a highlighted phrase let .hl's own background-clip:text
+   gradient (below) supply their colour instead of fighting it with a
+   second, conflicting transition. */
+.hl .word {
+  color: inherit;
+  transition: none;
+}
 
 /* ---------- Highlight reveal ---------- */
 /* Registering --reveal/--hl-color as animatable custom properties lets a
@@ -181,6 +202,13 @@
   position: relative;
   display: inline;
   white-space: nowrap;            /* wraps as one atomic unit within the sentence, never splits mid-phrase */
+  /* Real reserved spacing (not just paint) from whatever word sits right
+     next to the highlight on the same line — e.g. paragraph 2's "care
+     that [understands their skin] not just". ::before's own -0.35em
+     overhang below is paint-only (position:absolute, out of flow), so on
+     its own it was overlapping the actual space character next to short
+     gaps like this instead of adding to it. */
+  margin-inline: 0.15em;
   border-radius: 0.2em;
   --reveal: 0%;
   --hl-color: #8695aa;            /* starts equal to the paragraph's own muted grey, so an unrevealed phrase is invisible as a "highlight" */
@@ -188,12 +216,12 @@
   background-image: linear-gradient(to right, #fff 0%, #fff var(--reveal), var(--hl-color) var(--reveal));
   -webkit-background-clip: text;
   background-clip: text;
-  /* A 2s delay before either starts moving: without it, the highlight had
-     already finished growing by the time a reader's eye actually reached
-     that phrase (the paragraph's own colour activates instantly at the
-     same scroll threshold), so it read as "pre-highlighted" rather than
-     revealed. The colour fade + growth themselves stay unchanged. */
-  transition: --reveal 550ms cubic-bezier(0.22, 1, 0.36, 1) 2000ms, --hl-color 450ms ease 2000ms;
+  /* No delay, and short (180-250ms range) — this fires the instant a
+     line's index crosses activeLineCount, which is itself already a
+     direct function of scroll position (see about.js), so the wipe
+     needs to read as "keeping up with the reader," not as its own
+     separate beat. */
+  transition: --reveal 220ms ease-out, --hl-color 220ms ease-out;
 }
 
 .hl::before {
@@ -211,7 +239,9 @@
   clip-path: inset(0 calc(100% - var(--reveal)) 0 0);
 }
 
-.about__lead.is-active .hl {
+/* about.js adds .is-active straight to .hl (and to each plain .word)
+   per-line — no more parent-level .about__lead.is-active gate. */
+.hl.is-active {
   --reveal: 100%;
   --hl-color: var(--slate-500);
 }
@@ -219,7 +249,7 @@
 @media (prefers-reduced-motion: reduce) {
   .about__photo img { transition: none; }
   .about__photo { animation: none !important; }
-  .about__lead,
+  .word,
   .hl { transition: none; }
 }
 
@@ -232,11 +262,11 @@
 @media (min-width: 940px) {
   /* The frame's own absolutely-positioned content already opens with a
      40px (2.5rem) offset before the badge, matching Figma — this
-     section's own padding just tops that up to 3rem (48px) total, so the
-     Partners → About gap matches Hero → Partners exactly (that gap is
-     entirely .partners's own 3rem top padding — .stage's box ends flush
-     at its ring's true bottom edge, no padding of its own). */
-  .about { padding-top: 0.5rem; }
+     section's own padding tops that up to 50px (0.625rem + 40px) total,
+     matching the site's no-margin-between-sections rule: each section's
+     padding is the only gap, and this one has two layers (its own
+     padding-top plus the frame's built-in offset) instead of one. */
+  .about { padding-top: 0.625rem; }
 
   .about__frame {
     height: 52.8125rem;           /* 845px */
@@ -257,7 +287,7 @@
     top: 6.375rem;                /* 102px */
     width: 16.6651rem;            /* 266.642px */
     height: 18.7091rem;           /* 299.345px */
-    transform-origin: 36% 15%;    /* the left pushpin's own centre, in this box's own coordinate space — see the calc note below */
+    transform-origin: 43% 3.5%;   /* the left pushpin's own centre, in this box's own coordinate space — see the calc note below */
   }
 
   .about__photo--right {
@@ -287,13 +317,13 @@
      differs slightly from the wrapper's own origin above): pin centre in
      frame coordinates, minus the img's frame-relative top-left, divided
      by the img's own 229x268 box.
-     Left:  pin (176,148) − img (98.8,117.7) = (77.2,30.3) → 33.7%,11.3%
+     Left:  pin (194.1,112.4) − img (98.8,117.7) = (95.3,-5.3) → 41.6%,-1.97%
      Right: pin (1278,538) − img (1163.6,501.3) = (114.4,36.7) → 50.0%,13.7%
      Different magnitude AND direction per photo — left leans further
      into its own tilt as you scroll, right leans further into its own
      (opposite-signed) tilt, at a different rate. */
   .about__photo--left img {
-    transform-origin: 34% 11%;
+    transform-origin: 41.6% -1.97%;
     transform: rotate(calc(-8.64deg - var(--about-progress) * 2.6deg))
                translateY(calc(var(--about-progress) * -1.75rem));
   }
@@ -315,7 +345,7 @@
 
   .about__pushpin--left {
     left: 6.25rem;                 /* 100px */
-    top: 4.5rem;                   /* 72px */
+    top: 3rem;                     /* 48px */
   }
 
   .about__pushpin--right {
@@ -326,7 +356,7 @@
   .about__content {
     position: absolute;
     left: 50%;
-    top: 2rem;                   /* 40px */
+    top: 2.5rem;                   /* 40px */
     transform: translateX(-50%);
     max-width: none;
   }

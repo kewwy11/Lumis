@@ -86,7 +86,7 @@ body {
   width: 100%;
   max-width: 1512px;
   margin-inline: auto;
-  padding: 1.5rem 1.25rem 3.5rem;
+  padding: 1.5rem 1.25rem 3rem;   /* 48px bottom — sections meet with no margin between them, each section's own padding is the only gap */
   transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -1171,11 +1171,15 @@ body {
 
   .stage {
     position: relative;
-    /* 934px: derived from the ring below, not a fixed Figma frame height
-       like hero2's — 48px top margin + 3×242px portraits + 2×64px gaps +
-       32px bottom margin. */
-    height: 58.375rem;
-    padding: 0;
+    /* 902px of ring content (48px top margin + 3×242px portraits + 2×64px
+       gaps), then a real 48px padding-bottom on top of that — not baked
+       into the height like the old 32px margin was. Note padding-bottom
+       is only "real" here in the sense of documenting intent: every
+       child is absolutely positioned (so nothing actually flows into or
+       reacts to this padding) — what makes the 48px of trailing space
+       real is `height` including it (902 + 48 = 950px, 59.375rem). */
+    height: 59.375rem;
+    padding: 0 0 3rem;
   }
 
   /* Absolute boxes. Vertical offsets are rem (they scale with the root

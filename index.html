@@ -333,9 +333,11 @@
   </section>
 
   <!-- About — "Why Lumis exists". Figma "about-inactive"/"about-active"
-       (nodes 2426:4199 / 2144:11760). Body copy starts muted and
-       activates paragraph-by-paragraph (cumulative, never deactivates)
-       as the section scrolls through the viewport — see about.js. -->
+       (nodes 2426:4199 / 2144:11760). Body copy starts muted; about.js
+       splits .about__body's text into per-word spans at runtime, groups
+       them into visual lines, and reveals one line at a time (colour +
+       any highlighted phrase) as a pure function of scroll position —
+       see about.js. -->
   <section class="about" id="about" aria-labelledby="about-heading">
     <div class="about__frame">
       <img class="about__pushpin about__pushpin--left" src="images/about-pushpin.png" alt="" width="152" height="152" aria-hidden="true">
@@ -356,24 +358,26 @@
             <span class="chip__dot" aria-hidden="true"></span>
             Why Lumis exists
           </p>
-          <h2 class="about__heading" id="about-heading">Skin isn't one-size-fits-all.</h2>
+          <h2 class="about__heading" id="about-heading">Skin isn't one-size-<br>fits-all.</h2>
         </div>
 
-        <p class="about__lead about__lead--intro">
-          For too long, skincare has relied on research, products and technology that don't always reflect the <span class="hl">diversity of real people.</span>
-        </p>
+        <div class="about__body">
+          <p class="about__lead about__lead--intro">
+            For too long, skincare has relied on research, products and technology that don't always reflect the <span class="hl">diversity of real people.</span>
+          </p>
 
-        <p class="about__lead about__lead--care">
-          At Lumis, we believe every person deserves care that <span class="hl">understands their skin</span> not just the most common skin tone in a dataset.
-        </p>
+          <p class="about__lead about__lead--care">
+            At Lumis, we believe every person deserves care that <span class="hl">understands their skin</span> not just the most common skin tone in a dataset.
+          </p>
 
-        <p class="about__lead about__lead--combine">
-          By combining intelligent skin analysis with <span class="hl">licensed dermatologists</span>, we help people get personalised care that's faster, more accessible and built around them.
-        </p>
+          <p class="about__lead about__lead--combine">
+            By combining intelligent skin analysis with <span class="hl">licensed dermatologists</span>, we help people get personalised care that's faster, more accessible and built around them.
+          </p>
 
-        <p class="about__lead about__lead--because">
-          Because better skincare starts with <span class="hl">being seen.</span>
-        </p>
+          <p class="about__lead about__lead--because">
+            Because better skincare starts with <span class="hl">being seen.</span>
+          </p>
+        </div>
       </div>
     </div>
   </section>
