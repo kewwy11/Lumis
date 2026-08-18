@@ -1,0 +1,337 @@
+/* =============================================================
+   About — "Why Lumis exists"
+   Figma "about-inactive" (node 2426:4199) / "about-active" (node
+   2144:11760), 1512 x 845. Reuses style.css's shared tokens plus its
+   .chip component for the badge pill, but is otherwise self-contained
+   per section, per the "split as you go" convention (see partners.css).
+
+   Behaviour: as the section scrolls through the viewport, four
+   activation stages (the three body paragraphs + the final statement)
+   switch on cumulatively — never back off once passed, but fully
+   reversible if the user scrolls back up above a stage's threshold.
+   about.js computes a 0-1 scroll progress for the section and:
+   - toggles an `.is-active` class per paragraph at 20/40/60/80%
+     thresholds (drives the colour fade + highlight reveal below, both
+     plain CSS transitions so the reversal is "free"),
+   - writes that same progress to `--about-progress` every frame, which
+     the two photos read directly for their (continuous, not staged)
+     parallax drift.
+   ============================================================= */
+
+.about {
+  max-width: 1512px;
+  margin-inline: auto;
+  padding: 2rem 1.25rem 3rem;    /* top trimmed at the desktop breakpoint below — .about__content already carries its own 40px Figma offset, so this was stacking on top of it and doubling the gap after .partners */
+}
+
+.about__frame {
+  position: relative;
+  --about-progress: 0;
+}
+
+/* ---------- Photos (mobile: a small row above the copy) ---------- */
+.about__photos {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.about__photo {
+  flex-shrink: 0;
+  width: 7.5rem;
+}
+
+.about__photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 229 / 268;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  box-shadow: 0 1.25rem 2.5rem -1.25rem rgba(15, 23, 42, 0.35);
+}
+
+/* Rotations are part of the brand look, not a wide-screen-only flourish
+   — kept at every size. The scroll parallax/wobble below is layered on
+   top only at the desktop breakpoint, where the pins are real, positioned
+   elements to anchor against — see that media query. */
+.about__photo--left img { transform: rotate(-8.64deg); }
+.about__photo--right img { transform: rotate(9.02deg); }
+
+/* Entrance settle: each photo tilts a couple of degrees past its resting
+   angle, wobbles back the other way, then settles — as if it's still
+   swinging from the pin it was just hung on. Runs once per photo
+   (about.js watches each .about__photo with its own IntersectionObserver
+   and adds .is-in the moment *that* photo enters the viewport — not a
+   shared section-wide scroll threshold, since the two photos sit at very
+   different depths inside the frame; it isn't removed again after, since
+   a one-way "just arrived" flourish re-firing every time you nudge the
+   scrollbar would read as a glitch, not a feature). Left/right use mirrored keyframes so they swing opposite
+   ways. Lives on the *wrapper* (not the img) so it composes with, rather
+   than fights, the img's own continuous scroll transform below — an
+   element can only have one `transform`/`animation` pair at a time. */
+@keyframes photo-settle-left {
+  0%   { transform: rotate(4deg) scale(1.04); }
+  40%  { transform: rotate(-3deg) scale(1.015); }
+  70%  { transform: rotate(1.5deg) scale(1.005); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes photo-settle-right {
+  0%   { transform: rotate(-4deg) scale(1.04); }
+  40%  { transform: rotate(3deg) scale(1.015); }
+  70%  { transform: rotate(-1.5deg) scale(1.005); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Idle wiggle: a quick, small shake that repeats every 5s while the
+   section is on screen (about.js re-adds .is-wiggling on an interval,
+   torn down the moment the section scrolls out of view). Mirrored per
+   side, same as the entrance settle. Declared after .is-in in the
+   desktop rules below so it takes over once .is-in's one-shot animation
+   has long since finished and both classes are sitting on the element
+   together — equal specificity, later wins. */
+@keyframes wiggle-left {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-3deg); }
+  50%      { transform: rotate(2.5deg); }
+  75%      { transform: rotate(-1.5deg); }
+}
+
+@keyframes wiggle-right {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(3deg); }
+  50%      { transform: rotate(-2.5deg); }
+  75%      { transform: rotate(1.5deg); }
+}
+
+.about__pushpin { display: none; }  /* decorative-only flourish; reintroduced at the desktop breakpoint below */
+
+/* ---------- Copy column ---------- */
+.about__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;                      /* 32px — badge-to-heading, heading-to-paragraph, and paragraph-to-paragraph all share this one Figma-exact rhythm */
+  max-width: 34.5rem;             /* 552px, the widest paragraph's designed width */
+  margin-inline: auto;
+  text-align: center;
+}
+
+.about__badge-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;                      /* 16px, matches Figma's badge-to-heading gap */
+}
+
+.about__heading {
+  margin: 0;
+  color: var(--header);
+  font-size: 2.25rem;             /* 36px */
+  font-weight: 600;
+  line-height: normal;
+}
+
+/* ---------- Paragraphs: muted grey until their stage activates ---------- */
+.about__lead {
+  margin: 0 auto;
+  /* Deliberately narrower than .about__heading's own natural width (~30.3rem
+     at this font/weight) at every breakpoint — both scale off the same root
+     font-size clamp, so the ratio between them holds at any viewport width.
+     Figma's own per-paragraph widths (552/540/534/370px) actually ran wider
+     than the heading; overridden here so every wrapped line reads as
+     visually nested under it, not spilling past its edges. */
+  max-width: 28rem;                /* 448px */
+  width: 100%;
+  color: var(--grey-400);
+  font-size: 1.25rem;              /* 20px */
+  font-weight: 400;
+  line-height: 1.5;                /* generous, readable leading between wrapped lines within a paragraph — the 2rem gap above/below is the separate rhythm between blocks */
+  transition: color 450ms ease;
+}
+
+.about__lead.is-active { color: var(--slate-500); }
+
+/* ---------- Highlight reveal ---------- */
+/* Registering --reveal/--hl-color as animatable custom properties lets a
+   single `transition` interpolate both the growing background box AND
+   the text's colour hard-stop together, so they always stay in lockstep
+   with no JS driving per-frame math. Unsupported browsers just snap
+   instantly to the end state instead of easing — harmless. */
+/* inherits:true is load-bearing here — .hl::before needs to pick up the
+   --reveal/--hl-color values set on .hl itself (its originating element),
+   which only happens through inheritance. With inherits:false the pseudo
+   silently fell back to each property's initial-value instead (0%),
+   leaving the highlight box permanently collapsed to zero width. */
+@property --reveal {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --hl-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #8695aa;
+}
+
+.hl {
+  position: relative;
+  display: inline;
+  white-space: nowrap;            /* wraps as one atomic unit within the sentence, never splits mid-phrase */
+  border-radius: 0.2em;
+  --reveal: 0%;
+  --hl-color: #8695aa;            /* starts equal to the paragraph's own muted grey, so an unrevealed phrase is invisible as a "highlight" */
+  color: transparent;
+  background-image: linear-gradient(to right, #fff 0%, #fff var(--reveal), var(--hl-color) var(--reveal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* A 2s delay before either starts moving: without it, the highlight had
+     already finished growing by the time a reader's eye actually reached
+     that phrase (the paragraph's own colour activates instantly at the
+     same scroll threshold), so it read as "pre-highlighted" rather than
+     revealed. The colour fade + growth themselves stay unchanged. */
+  transition: --reveal 550ms cubic-bezier(0.22, 1, 0.36, 1) 2000ms, --hl-color 450ms ease 2000ms;
+}
+
+.hl::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -0.1em -0.35em;          /* generous left/right breathing room — too tight against the glyphs otherwise reads as the box not "sitting" on the text */
+  background: var(--blue);
+  border-radius: 0.2em;
+  /* Clipping (rather than animating width directly) keeps the box's own
+     left/right padding constant at every reveal amount — a width-based
+     grow would need the padding baked into that same percentage, which
+     fights the padding at partial reveal. Clip-path just uncovers the
+     already-correctly-padded box from the right. */
+  clip-path: inset(0 calc(100% - var(--reveal)) 0 0);
+}
+
+.about__lead.is-active .hl {
+  --reveal: 100%;
+  --hl-color: var(--slate-500);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about__photo img { transition: none; }
+  .about__photo { animation: none !important; }
+  .about__lead,
+  .hl { transition: none; }
+}
+
+/* =============================================================
+   Desktop — the Figma composition, absolutely positioned inside a
+   fixed 1512x845 frame. Shares style.css's html { font-size: clamp(...) }
+   scaling (same media query, same 16px-at-1512px logic), so this
+   locks to the rest of the page at every width.
+   ============================================================= */
+@media (min-width: 940px) {
+  /* The frame's own absolutely-positioned content already opens with a
+     40px (2.5rem) offset before the badge, matching Figma — this
+     section's own padding just tops that up to 3rem (48px) total, so the
+     Partners → About gap matches Hero → Partners exactly (that gap is
+     entirely .partners's own 3rem top padding — .stage's box ends flush
+     at its ring's true bottom edge, no padding of its own). */
+  .about { padding-top: 0.5rem; }
+
+  .about__frame {
+    height: 52.8125rem;           /* 845px */
+  }
+
+  .about__photos { display: contents; }
+
+  .about__photo {
+    position: absolute;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .about__photo--left {
+    left: 5rem;                   /* 80px */
+    top: 6.375rem;                /* 102px */
+    width: 16.6651rem;            /* 266.642px */
+    height: 18.7091rem;           /* 299.345px */
+    transform-origin: 36% 15%;    /* the left pushpin's own centre, in this box's own coordinate space — see the calc note below */
+  }
+
+  .about__photo--right {
+    left: calc(75% + 0.625rem);   /* 10px */
+    top: 30.3125rem;               /* 485px */
+    width: 16.7607rem;            /* 268.171px */
+    height: 18.7861rem;           /* 300.577px */
+    transform-origin: 50% 18%;    /* the right pushpin's own centre */
+  }
+
+  .about__photo--left.is-in  { animation: photo-settle-left 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .about__photo--right.is-in { animation: photo-settle-right 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+  .about__photo--left.is-wiggling  { animation: wiggle-left 600ms ease-in-out; }
+  .about__photo--right.is-wiggling { animation: wiggle-right 600ms ease-in-out; }
+
+  .about__photo img {
+    width: 14.3125rem;            /* 229px */
+    height: 16.75rem;             /* 268px */
+    aspect-ratio: auto;
+  }
+
+  /* Pin-anchored continuous scroll tilt + drift, layered on top of each
+     photo's resting rotation (declared above, outside this media query).
+     transform-origin is each pin's own centre converted into *this img's*
+     coordinate space (the img sits inset within its wrapper, so this
+     differs slightly from the wrapper's own origin above): pin centre in
+     frame coordinates, minus the img's frame-relative top-left, divided
+     by the img's own 229x268 box.
+     Left:  pin (176,148) − img (98.8,117.7) = (77.2,30.3) → 33.7%,11.3%
+     Right: pin (1278,538) − img (1163.6,501.3) = (114.4,36.7) → 50.0%,13.7%
+     Different magnitude AND direction per photo — left leans further
+     into its own tilt as you scroll, right leans further into its own
+     (opposite-signed) tilt, at a different rate. */
+  .about__photo--left img {
+    transform-origin: 34% 11%;
+    transform: rotate(calc(-8.64deg - var(--about-progress) * 2.6deg))
+               translateY(calc(var(--about-progress) * -1.75rem));
+  }
+
+  .about__photo--right img {
+    transform-origin: 50% 14%;
+    transform: rotate(calc(9.02deg + var(--about-progress) * 3.1deg))
+               translateY(calc(var(--about-progress) * 1.2rem));
+  }
+
+  .about__pushpin {
+    display: block;
+    position: absolute;
+    z-index: 1;                   /* pins sit over the photo corners in Figma; DOM order alone would put the later, opaque photos on top instead */
+    width: 9.5rem;                /* 152px */
+    height: 9.5rem;
+    pointer-events: none;
+  }
+
+  .about__pushpin--left {
+    left: 6.25rem;                 /* 100px */
+    top: 4.5rem;                   /* 72px */
+  }
+
+  .about__pushpin--right {
+    left: calc(75% + 4.25rem);     /* 68px */
+    top: 28.875rem;                 /* 462px */
+  }
+
+  .about__content {
+    position: absolute;
+    left: 50%;
+    top: 2rem;                   /* 40px */
+    transform: translateX(-50%);
+    max-width: none;
+  }
+
+  /* Paragraph widths (28rem, shared) come from the base .about__lead rule
+     above — deliberately no longer Figma's differing per-paragraph widths,
+     see the comment there. */
+}
