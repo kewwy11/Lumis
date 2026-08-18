@@ -21,7 +21,7 @@
 /* Same recipe as .hero__subtitle: grey-400, normal line-height, no extra styling. */
 .partners__heading {
   margin: 0;
-  color: var(--grey-500);
+  color: var(--grey-400);
   font-size: 1.25rem;         /* 20px */
   font-weight: 400;
   line-height: normal;
