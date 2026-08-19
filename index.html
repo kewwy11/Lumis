@@ -406,12 +406,10 @@
             <p>We are currently growing across 40+ countries, which include and skin types on the MST scale. We have trained dermatologists in these regions.</p>
           </div>
         </div>
-        <div class="why-lumis__map">
-          <img src="images/why-lumis/world-map.png" alt="World map with Greenland and dozens of other countries marked, showing where Lumis has trained dermatologists." width="397" height="266">
-          <div class="why-lumis__map-tooltip">
-            <p class="why-lumis__map-tooltip-title">Greenland</p>
-            <p class="why-lumis__map-tooltip-sub">2,842 assessments</p>
-          </div>
+        <div class="why-lumis__map" id="whyLumisMap" role="img" aria-label="World map spotlighting 12 countries where Lumis has trained dermatologists, one at a time.">
+          <noscript>
+            <img src="images/why-lumis/world-map.png" alt="World map with Greenland and dozens of other countries marked, showing where Lumis has trained dermatologists." width="397" height="266">
+          </noscript>
         </div>
       </article>
 
@@ -425,28 +423,12 @@
             <p>Representing every MST skin tone across all ages and across multiple conditions, with one goal in mind.</p>
           </div>
         </div>
-        <div class="why-lumis__tones">
-          <figure class="why-lumis__tone">
-            <div class="why-lumis__tone-frame">
-              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-2.png" alt="Close-up portrait used to represent MST VII skin tone.">
-              <span class="why-lumis__tone-mst">MST VII</span>
+        <div class="why-lumis__carousel" id="whyLumisCarousel" aria-hidden="true">
+          <noscript>
+            <div class="why-lumis__carousel-track">
+              <img src="images/why-lumis/tone-1.png" alt="Close-up portrait of a smiling woman with rosacea, age 47, used to represent MST V skin tone." width="220" height="208">
             </div>
-            <img class="why-lumis__tone-shelf" src="icons/why-lumis/photo-shelf.svg" alt="" aria-hidden="true">
-          </figure>
-          <figure class="why-lumis__tone why-lumis__tone--feature">
-            <div class="why-lumis__tone-frame">
-              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-1.png" alt="Close-up portrait of a smiling woman with rosacea, age 47, used to represent MST V skin tone.">
-              <span class="why-lumis__tone-mst">MST V</span>
-              <span class="why-lumis__tone-condition">Rosacea<br>Age 47</span>
-            </div>
-          </figure>
-          <figure class="why-lumis__tone">
-            <div class="why-lumis__tone-frame">
-              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-3.png" alt="Close-up portrait used to represent MST V skin tone.">
-              <span class="why-lumis__tone-mst">MST V</span>
-            </div>
-            <img class="why-lumis__tone-shelf" src="icons/why-lumis/photo-shelf.svg" alt="" aria-hidden="true">
-          </figure>
+          </noscript>
         </div>
       </article>
 
@@ -595,6 +577,7 @@
 
   <script src="script.js"></script>
   <script src="about.js"></script>
+  <script src="why-lumis.js" defer></script>
 </body>
 </html>
 

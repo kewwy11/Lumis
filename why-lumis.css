@@ -72,7 +72,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  overflow: hidden;                /* clips card 2's photo strip, which deliberately bleeds past both edges — see .why-lumis__tones */
+  overflow: hidden;                /* keeps corners clean — card 2's own .why-lumis__carousel clips its own overflow */
   width: 100%;
 }
 
@@ -144,22 +144,90 @@
   letter-spacing: 0.14px;
 }
 
-/* ---------- Card 1: world map ---------- */
+/* ---------- Card 1: world map spotlight ----------
+   why-lumis.js fetches images/why-lumis/world-map.svg (one inline SVG,
+   every country its own <path id="country-XX">) and injects it here,
+   then builds the dots and tooltip on top of it. The <noscript> image
+   in the markup is the only thing a no-JS visitor sees.
+
+   Cycling a location (every 10s, why-lumis.js):
+   - the previous active country's amber copy (.why-lumis__country-overlay,
+     a clone of its base path stacked on top — the reliable way to
+     animate a fill colour in, since not every browser tweens `fill`
+     itself) fades out over 400ms and is then removed;
+   - a fresh clone of the new country fades in over 500ms ease-out;
+   - the pulsing ring moves to the new dot (CSS animation, so it just
+     keeps looping — JS only toggles which dot has .is-active);
+   - the tooltip fades/drops out over 200ms, then — 150ms after the
+     cycle started, so the swap lands while it's nearly invisible —
+     its content and position update and it fades/rises/scales back in
+     over ~280ms with a slight overshoot.
+   Paused via IntersectionObserver while off-screen; under
+   prefers-reduced-motion the whole cycle never starts and the map
+   just sits on the first location. */
 .why-lumis__map {
   position: relative;
   width: 100%;
 }
 
-.why-lumis__map img {
+/* fill on the base map and on .why-lumis__country-overlay clones is
+   set inline by why-lumis.js (attribute/style, not this class) —
+   dynamically injected/cloned SVG nodes picking up a class's rules
+   from an external stylesheet is unreliable, inline isn't. Same for
+   the overlay's opacity transition. Reduced motion doesn't need a
+   rule here either: without the interval running, showActive() only
+   ever renders the first overlay at immediate (transition:none). */
+.why-lumis__map-svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
+.why-lumis__map-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.why-lumis__map-dot {
+  position: absolute;
+  width: 0.625rem;                 /* 10px (8px + 2px) */
+  height: 0.625rem;
+  transform: translate(-50%, -50%);
+}
+
+.why-lumis__map-dot-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--blue-dark);
+  border: 2px solid var(--blue-100);
+}
+
+.why-lumis__map-dot-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--blue-dark);
+  opacity: 0;
+}
+
+/* Ring only animates on whichever dot is currently active. */
+.why-lumis__map-dot.is-active .why-lumis__map-dot-ring {
+  animation: why-lumis-dot-pulse 2s infinite;
+}
+
+@keyframes why-lumis-dot-pulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-lumis__map-dot.is-active .why-lumis__map-dot-ring { animation: none; opacity: 0; }
+}
+
 .why-lumis__map-tooltip {
   position: absolute;
-  left: 42.8%;
-  top: 4.9%;
   background: var(--white);
   border-radius: 0.625rem;         /* 10px */
   padding: 0.625rem;               /* 10px */
@@ -168,6 +236,35 @@
   flex-direction: column;
   gap: 0.625rem;                   /* 10px */
   white-space: nowrap;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  /* entering: fade/rise/scale in with a slight overshoot */
+  transition: opacity 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* anchor-right: tooltip's left edge sits at the dot (opens rightward).
+   anchor-left: tooltip's right edge sits at the dot (opens leftward),
+   so it never overflows the card on either side. */
+.why-lumis__map-tooltip--anchor-right { transform-origin: left top; }
+.why-lumis__map-tooltip--anchor-left  { transform-origin: right top; }
+
+.why-lumis__map-tooltip.is-leaving {
+  opacity: 0;
+  transform: translateY(4px) scale(1);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.why-lumis__map-tooltip.is-entering {
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-lumis__map-tooltip,
+  .why-lumis__map-tooltip.is-leaving,
+  .why-lumis__map-tooltip.is-entering { transition: none; }
 }
 
 /* Figma trims each line to its cap-height/baseline box (text-box-trim),
@@ -196,38 +293,80 @@
   text-box-edge: cap alphabetic;
 }
 
-/* ---------- Card 2: MST tone photo strip ---------- */
-/* The strip is wider (692px) than the card's own content column
-   (397px) by design — it bleeds 147.5px past both edges, clipped by
-   .why-lumis__card's overflow:hidden, so only slivers of the outer
-   two photos show while the centre one reads fully. */
-.why-lumis__tones {
-  display: flex;
-  align-items: center;
-  gap: 1rem;                       /* 16px */
-  margin-inline: -9.21875rem;      /* -147.5px */
+/* ---------- Card 2: folder carousel ----------
+   why-lumis.js builds this from ITEMS (duplicated twice for a seamless
+   loop) and drives a step-and-dwell cycle: slide the track by one
+   item-width-plus-gap (~700ms ease-in-out), hold ~2.8s, slide again.
+   translateX is computed from measured pixel sizes (not a fixed
+   formula) so it centers correctly at any viewport width. When the
+   index reaches the start of the second copy, it's snapped back by
+   ITEMS.length with transitions disabled for one frame — same content
+   at that position, so the reset isn't visible.
+
+   Whichever item is centred gets .is-active: the card scales up
+   (grows from the bottom, so it doesn't need a real height animation),
+   the cover drops down out of the way, and the MST tag + caption fade
+   in, staggered. Deactivating runs the same transitions in reverse —
+   the *inactive* state is each property's own base rule, entered at
+   whatever duration that base rule declares (70% of the .is-active
+   ones), so removing .is-active alone is enough to animate the exit. */
+.why-lumis__carousel {
+  width: 100%;
+  overflow: hidden;
 }
 
-.why-lumis__tone {
-  position: relative;
+/* Applied for one frame while why-lumis.js snaps the loop back to the
+   start of the array. The track's own instant jump isn't enough on
+   its own — the outgoing/incoming cards at the snap boundary are the
+   same content, so their .is-active handoff needs to be instant too,
+   or the outgoing one visibly plays its closing transition and the
+   incoming one visibly replays its entrance. */
+.why-lumis__carousel--snapping .why-lumis__carousel-card,
+.why-lumis__carousel--snapping .why-lumis__carousel-cover,
+.why-lumis__carousel--snapping .why-lumis__carousel-mst,
+.why-lumis__carousel--snapping .why-lumis__carousel-caption {
+  transition: none !important;
+}
+
+.why-lumis__carousel-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;                        /* 16px */
+  transition: transform 700ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.why-lumis__carousel-item {
   flex-shrink: 0;
-  width: 13.75rem;                 /* 220px */
-  height: 13rem;                   /* 208px */
+  width: 13.75rem;                  /* 220px */
+  height: 13rem;                    /* 208px */
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Same shape as the original static folder tiles (node 2144:28093):
+   an outer gradient box, a centred white "frame" clipping the photo,
+   and a shelf/cover image stacked on top of the frame. That gradient
+   is what reads as the thin blue glow around an active card's edges —
+   the cover itself slides all the way past the card's own
+   overflow:hidden when active, rather than stopping partway. */
+.why-lumis__carousel-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
   border-radius: 0 0 0.9375rem 0.9375rem;  /* 15px bottom corners only */
   overflow: hidden;
   background: linear-gradient(177deg, #f9fafb 22.165%, #2563eb 220.71%);
+  transform: scale(0.88);
+  transform-origin: bottom center;
+  transition: transform 280ms ease-out;   /* exit speed (70% of the 400ms entrance) */
 }
 
-.why-lumis__tone-shelf {
-  position: absolute;
-  left: -0.6875rem;                /* -11px */
-  top: 4rem;                       /* 64px */
-  width: 14.4375rem;                /* 231px */
-  height: 9rem;                     /* 144px */
-  display: block;
+.why-lumis__carousel-card.is-active {
+  transform: scale(1);
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);   /* spring-ish overshoot */
 }
 
-.why-lumis__tone-frame {
+.why-lumis__carousel-frame {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -239,9 +378,16 @@
   background: var(--white);
 }
 
+.why-lumis__carousel-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);   /* scrim so the tag/caption read on any photo */
+}
+
 /* Exact designed crop, not object-fit — the photo is deliberately
    larger than its frame and offset up-left so a specific region shows. */
-.why-lumis__tone-photo {
+.why-lumis__carousel-photo {
   position: absolute;
   left: -2rem;                      /* -32px */
   top: -4.8125rem;                  /* -77px */
@@ -251,33 +397,82 @@
   object-fit: cover;
 }
 
-.why-lumis__tone-frame::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.why-lumis__tone-mst,
-.why-lumis__tone-condition {
+.why-lumis__carousel-mst {
   position: absolute;
   z-index: 1;
+  right: 0.5625rem;                 /* 9px */
+  top: 0.5625rem;                   /* 9px */
   color: var(--white);
+  font-weight: 400;
   font-size: 0.625rem;              /* 10px */
   line-height: normal;
   white-space: nowrap;
+  opacity: 0;
+  transform: translateY(0.5rem);    /* 8px */
+  transition: opacity 175ms ease, transform 175ms ease;   /* exit (70% of 250ms) */
 }
 
-.why-lumis__tone-mst {
-  right: 0.5625rem;                 /* 9px */
-  top: 0.5625rem;                   /* 9px */
+.why-lumis__carousel-card.is-active .why-lumis__carousel-mst {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 250ms ease-out 200ms, transform 250ms ease-out 200ms;
 }
 
-.why-lumis__tone-condition {
+/* The folder cover — the same shelf/notch shape as the original static
+   tiles, closed (translateY:0) by default. Going active drops it a
+   full shelf-height down, clearing the card's own overflow:hidden
+   entirely — matching Figma, where the active variant has no cover at
+   all — leaving only the outer gradient's natural edge glow behind. */
+.why-lumis__carousel-cover {
+  position: absolute;
+  left: -0.6875rem;                 /* -11px */
+  top: 4rem;                        /* 64px */
+  width: 14.4375rem;                 /* 231px */
+  height: 9rem;                      /* 144px */
+  display: block;
+  transform: translateY(0);
+  transition: transform 315ms ease-in;   /* exit — lid closing (70% of 450ms) */
+}
+
+.why-lumis__carousel-card.is-active .why-lumis__carousel-cover {
+  transform: translateY(9rem);      /* clears the card fully */
+  transition: transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.why-lumis__carousel-caption {
+  position: absolute;
+  z-index: 1;
   left: 1rem;                       /* 16px */
   top: 9.3125rem;                   /* 149px */
-  white-space: normal;
-  line-height: 1.3;
+  width: 2.6875rem;                 /* 43px */
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;                   /* 3px, between the condition and age lines */
+  color: var(--white);
+  font-weight: 400;
+  font-size: 0.625rem;              /* 10px */
+  line-height: normal;
+  opacity: 0;
+  transform: translateY(0.5rem);    /* 8px */
+  transition: opacity 175ms ease, transform 175ms ease;   /* exit (70% of 250ms) */
+}
+
+.why-lumis__carousel-caption p {
+  margin: 0;
+}
+
+.why-lumis__carousel-card.is-active .why-lumis__carousel-caption {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 250ms ease-out 280ms, transform 250ms ease-out 280ms;   /* 80ms after the MST tag */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-lumis__carousel-track,
+  .why-lumis__carousel-card,
+  .why-lumis__carousel-mst,
+  .why-lumis__carousel-cover,
+  .why-lumis__carousel-caption { transition: none; }
 }
 
 /* ---------- Card 3: dermatologist chat ---------- */
@@ -328,9 +523,11 @@
 }
 
 /* =============================================================
-   Narrow screens — one column; the photo strip's bleed and the
-   card's space-between rhythm both assume the shared-height grid
-   above, so both get simpler, safer fallbacks here.
+   Narrow screens — one column; the card's space-between rhythm
+   assumes the shared-height grid above, so it gets a simpler,
+   safer fallback here. The carousel's own centering is computed
+   from measured pixel sizes in why-lumis.js, so it needs nothing
+   extra at any width.
    ============================================================= */
 @media (max-width: 939px) {
   .why-lumis__grid {
@@ -340,11 +537,5 @@
   .why-lumis__card {
     justify-content: flex-start;
     gap: 2rem;
-  }
-
-  .why-lumis__tones {
-    margin-inline: 0;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;        /* room for the scrollbar so it doesn't sit flush against the photos */
   }
 }
