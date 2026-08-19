@@ -8,11 +8,12 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="partners.css">
   <link rel="stylesheet" href="about.css">
+  <link rel="stylesheet" href="why-lumis.css">
 </head>
 <body>
   <!-- The hero is one composition: a ring of portraits around a centred message.
@@ -379,6 +380,94 @@
           </p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Why Lumis — "More than an AI scan." Figma "why-lumis" (node 2144:12853).
+       Three static cards; no scroll-driven behaviour was asked for here, so
+       none was added — see notes.md before adding any. -->
+  <section class="why-lumis" id="why-lumis" aria-labelledby="why-lumis-heading">
+    <div class="why-lumis__intro">
+      <p class="chip">
+        <span class="chip__dot" aria-hidden="true"></span>
+        Why people choose Lumis
+      </p>
+      <h2 class="why-lumis__heading" id="why-lumis-heading">More than an AI scan.</h2>
+    </div>
+
+    <div class="why-lumis__grid">
+      <article class="why-lumis__card">
+        <div class="why-lumis__card-header">
+          <div class="why-lumis__icon why-lumis__icon--blue">
+            <img class="why-lumis__icon-glyph" src="icons/why-lumis/icon-borders.svg" alt="" width="16" height="16">
+          </div>
+          <div class="why-lumis__card-text">
+            <h3>Skincare has no borders.</h3>
+            <p>We are currently growing across 40+ countries, which include and skin types on the MST scale. We have trained dermatologists in these regions.</p>
+          </div>
+        </div>
+        <div class="why-lumis__map">
+          <img src="images/why-lumis/world-map.png" alt="World map with Greenland and dozens of other countries marked, showing where Lumis has trained dermatologists." width="397" height="266">
+          <div class="why-lumis__map-tooltip">
+            <p class="why-lumis__map-tooltip-title">Greenland</p>
+            <p class="why-lumis__map-tooltip-sub">2,842 assessments</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="why-lumis__card">
+        <div class="why-lumis__card-header why-lumis__card-header--tone">
+          <div class="why-lumis__icon why-lumis__icon--amber">
+            <img src="icons/why-lumis/icon-tone.svg" alt="" width="16" height="16">
+          </div>
+          <div class="why-lumis__card-text">
+            <h3>Different tone, different story.</h3>
+            <p>Representing every MST skin tone across all ages and across multiple conditions, with one goal in mind.</p>
+          </div>
+        </div>
+        <div class="why-lumis__tones">
+          <figure class="why-lumis__tone">
+            <div class="why-lumis__tone-frame">
+              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-2.png" alt="Close-up portrait used to represent MST VII skin tone.">
+              <span class="why-lumis__tone-mst">MST VII</span>
+            </div>
+            <img class="why-lumis__tone-shelf" src="icons/why-lumis/photo-shelf.svg" alt="" aria-hidden="true">
+          </figure>
+          <figure class="why-lumis__tone why-lumis__tone--feature">
+            <div class="why-lumis__tone-frame">
+              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-1.png" alt="Close-up portrait of a smiling woman with rosacea, age 47, used to represent MST V skin tone.">
+              <span class="why-lumis__tone-mst">MST V</span>
+              <span class="why-lumis__tone-condition">Rosacea<br>Age 47</span>
+            </div>
+          </figure>
+          <figure class="why-lumis__tone">
+            <div class="why-lumis__tone-frame">
+              <img class="why-lumis__tone-photo" src="images/why-lumis/tone-3.png" alt="Close-up portrait used to represent MST V skin tone.">
+              <span class="why-lumis__tone-mst">MST V</span>
+            </div>
+            <img class="why-lumis__tone-shelf" src="icons/why-lumis/photo-shelf.svg" alt="" aria-hidden="true">
+          </figure>
+        </div>
+      </article>
+
+      <article class="why-lumis__card">
+        <div class="why-lumis__card-header why-lumis__card-header--chat">
+          <div class="why-lumis__icon why-lumis__icon--green">
+            <img src="icons/why-lumis/icon-messages.svg" alt="" width="16" height="16">
+          </div>
+          <div class="why-lumis__card-text">
+            <h3>Behind every result is a dermatologist.</h3>
+            <p>Our platform only accommodates the best dermatologists in different regions and specialisations.</p>
+          </div>
+        </div>
+        <div class="why-lumis__chat">
+          <p class="why-lumis__chat-bubble why-lumis__chat-bubble--out">&ldquo;Hi Dr. Theresa, I've had these patches for months and they are beginning to itch.&rdquo;</p>
+          <p class="why-lumis__chat-bubble why-lumis__chat-bubble--in">&ldquo;I can see the irritation around your cheeks. Let's talk through what's been happening.&rdquo;</p>
+          <div class="why-lumis__chat-typing" aria-hidden="true">
+            <img src="icons/why-lumis/chat-dots.svg" alt="" width="46" height="12">
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 

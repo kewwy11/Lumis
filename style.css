@@ -27,8 +27,13 @@
 
   --card-radius:   1.875rem;  /* 30px */
   --grey-500:      #526077;  /* grey500     */
+  --grey-700:      #434e61;  /* grey700 (why-lumis card headings) */
   --border:        #edeff3;  /* Bordercolor2 */
   --green:         #047852;
+  --green-100:     #d1faec;  /* success100 */
+  --warning-700:   #b47409;
+  --warning-100:   #feeac7;
+  --bg-soft:       #f9fafb;  /* Backgroundcolor (why-lumis card fill) */
   --slate-500:     #64748b;  /* Textcolor (about section's "active" paragraph colour) */
   --font: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }

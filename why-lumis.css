@@ -1,0 +1,341 @@
+/* =============================================================
+   Why Lumis — "More than an AI scan."
+   Figma "why-lumis" (node 2144:12853). Reuses style.css's shared tokens
+   plus its .chip component for the badge pill, self-contained per
+   section otherwise (see partners.css for the convention).
+
+   Static section — nothing here is scroll-driven. The three cards
+   share one shape (icon + heading + body, then a visual that fills
+   the rest of the card): each .why-lumis__card has an explicit
+   min-height matching Figma's fixed 528px card frame (none of the
+   three cards' own content adds up to that on its own), and
+   `justify-content: space-between` between its two children so the
+   gap above the visual grows or shrinks to match however tall that
+   card's own heading/body happens to wrap — matching how Figma
+   produces a different gap per card from one rule, rather than three
+   hand-picked numbers.
+   ============================================================= */
+
+.why-lumis {
+  max-width: 1512px;
+  margin-inline: auto;
+  padding: 2rem 1.25rem 3rem;      /* 32px top, 20px sides, 48px bottom */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;                    /* 40px, badge+heading group to the card grid */
+}
+
+.why-lumis__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;                      /* 16px, matches the badge-to-heading rhythm used elsewhere */
+}
+
+.why-lumis__heading {
+  margin: 0;
+  color: #000;                    /* literal black in Figma for this heading — unlike the rest of the site's var(--header) navy, kept as designed */
+  font-size: 3rem;                /* 48px */
+  font-weight: 600;
+  line-height: normal;
+  text-align: center;
+}
+
+/* ---------- Card grid ---------- */
+.why-lumis__grid {
+  width: 100%;
+  max-width: 84.4375rem;          /* 1351px */
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;                   /* 20px */
+  align-items: stretch;           /* grid's own default, stated for clarity — this is what lets .why-lumis__card's space-between work off the tallest card's height */
+}
+
+.why-lumis__card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 2rem 1.25rem;          /* 32px / 20px */
+  min-height: 33rem;               /* 528px — Figma's fixed card height. None of the three cards' own content actually adds up to this on its own, so without a real height here space-between has nothing to distribute: align-items:stretch just matches every card to whichever one's content is tallest, and that card gets a 0px gap instead of its designed one. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;                /* clips card 2's photo strip, which deliberately bleeds past both edges — see .why-lumis__tones */
+  width: 100%;
+}
+
+.why-lumis__card-header {
+  width: 100%;
+  padding-inline: 0.625rem;        /* 10px — Figma insets the icon/heading/copy an extra 10px past the card's own padding; the visual (map, photo strip, chat) below it is not inset and runs to the card's full width */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;                       /* 16px, icon to text group */
+}
+
+/* Card 2's header is inset 10px/16px (left/right), not the 10px/10px every
+   other card uses — that's what Figma actually has for this card. */
+.why-lumis__card-header--tone {
+  padding-inline: 0.625rem 1rem;
+}
+
+/* Card 3's header is inset 16px/16px, not 10px/10px. */
+.why-lumis__card-header--chat {
+  padding-inline: 1rem;
+}
+
+.why-lumis__icon {
+  flex-shrink: 0;
+  width: 2.25rem;                  /* 36px */
+  height: 2.25rem;
+  border-radius: 0.625rem;         /* 10px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.why-lumis__icon--blue  { background: var(--blue-100); }
+.why-lumis__icon--amber { background: var(--warning-100); }
+.why-lumis__icon--green { background: var(--green-100); }
+
+/* icon-borders.svg's own artwork is 24x32 (3:4), not the 16x16 square its
+   outer asset box occupies in Figma — object-fit keeps that box's centering
+   (and the container's 10px inset) while letting the glyph render at its
+   true aspect instead of being stretched to fill a square. */
+.why-lumis__icon-glyph {
+  object-fit: contain;
+}
+
+.why-lumis__card-text {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;                   /* 10px */
+  text-align: left;
+}
+
+.why-lumis__card-text h3 {
+  margin: 0;
+  color: var(--grey-700);
+  font-size: 1.5rem;               /* 24px */
+  font-weight: 600;
+  line-height: normal;
+}
+
+.why-lumis__card-text p {
+  margin: 0;
+  color: var(--slate-500);
+  font-size: 0.875rem;             /* 14px */
+  font-weight: 400;
+  line-height: 1.375rem;           /* 22px */
+  letter-spacing: 0.14px;
+}
+
+/* ---------- Card 1: world map ---------- */
+.why-lumis__map {
+  position: relative;
+  width: 100%;
+}
+
+.why-lumis__map img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.why-lumis__map-tooltip {
+  position: absolute;
+  left: 42.8%;
+  top: 4.9%;
+  background: var(--white);
+  border-radius: 0.625rem;         /* 10px */
+  padding: 0.625rem;               /* 10px */
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;                   /* 10px */
+  white-space: nowrap;
+}
+
+/* Figma trims each line to its cap-height/baseline box (text-box-trim),
+   not the font's full leading — at 20px line-height with that trim
+   applied, the two-line tooltip hugs down to its actual 44px frame
+   height. Plain line-height alone can't reproduce that trim, so the
+   fallback here is a tighter line-height for browsers that don't
+   support the text-box properties yet. */
+.why-lumis__map-tooltip-title {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 0.625rem;             /* 10px */
+  font-weight: 400;
+  line-height: 0.875rem;           /* 14px — fallback; see comment above */
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+.why-lumis__map-tooltip-sub {
+  margin: 0;
+  color: var(--grey-400);
+  font-size: 0.625rem;             /* 10px */
+  font-weight: 300;
+  line-height: 0.875rem;           /* 14px — fallback; see comment above */
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+/* ---------- Card 2: MST tone photo strip ---------- */
+/* The strip is wider (692px) than the card's own content column
+   (397px) by design — it bleeds 147.5px past both edges, clipped by
+   .why-lumis__card's overflow:hidden, so only slivers of the outer
+   two photos show while the centre one reads fully. */
+.why-lumis__tones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;                       /* 16px */
+  margin-inline: -9.21875rem;      /* -147.5px */
+}
+
+.why-lumis__tone {
+  position: relative;
+  flex-shrink: 0;
+  width: 13.75rem;                 /* 220px */
+  height: 13rem;                   /* 208px */
+  border-radius: 0 0 0.9375rem 0.9375rem;  /* 15px bottom corners only */
+  overflow: hidden;
+  background: linear-gradient(177deg, #f9fafb 22.165%, #2563eb 220.71%);
+}
+
+.why-lumis__tone-shelf {
+  position: absolute;
+  left: -0.6875rem;                /* -11px */
+  top: 4rem;                       /* 64px */
+  width: 14.4375rem;                /* 231px */
+  height: 9rem;                     /* 144px */
+  display: block;
+}
+
+.why-lumis__tone-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12.1875rem;                /* 195px */
+  height: 11.8125rem;                /* 189px */
+  border-radius: 0.625rem;          /* 10px */
+  overflow: hidden;
+  background: var(--white);
+}
+
+/* Exact designed crop, not object-fit — the photo is deliberately
+   larger than its frame and offset up-left so a specific region shows. */
+.why-lumis__tone-photo {
+  position: absolute;
+  left: -2rem;                      /* -32px */
+  top: -4.8125rem;                  /* -77px */
+  width: 14.1875rem;                 /* 227px */
+  height: 19.75rem;                  /* 316px */
+  max-width: none;
+  object-fit: cover;
+}
+
+.why-lumis__tone-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.why-lumis__tone-mst,
+.why-lumis__tone-condition {
+  position: absolute;
+  z-index: 1;
+  color: var(--white);
+  font-size: 0.625rem;              /* 10px */
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.why-lumis__tone-mst {
+  right: 0.5625rem;                 /* 9px */
+  top: 0.5625rem;                   /* 9px */
+}
+
+.why-lumis__tone-condition {
+  left: 1rem;                       /* 16px */
+  top: 9.3125rem;                   /* 149px */
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* ---------- Card 3: dermatologist chat ---------- */
+.why-lumis__chat {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;                    /* 18px */
+}
+
+.why-lumis__chat-bubble {
+  margin: 0;
+  max-width: 19.8125rem;            /* 317px */
+  padding: 0.875rem 1rem;           /* 14px / 16px */
+  border-radius: 0.9375rem;         /* 15px */
+  font-family: var(--font);
+  font-weight: 300;
+  font-size: 0.75rem;               /* 12px */
+  line-height: 1.125rem;            /* 18px */
+}
+
+.why-lumis__chat-bubble--out {
+  align-self: flex-start;
+  background: var(--blue-dark);
+  color: var(--white);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.why-lumis__chat-bubble--in {
+  align-self: flex-end;
+  background: var(--white);
+  color: var(--slate-500);
+  box-shadow: 0 4px 10px rgba(110, 110, 110, 0.1);
+}
+
+/* Third "message" in the thread — a typing-indicator pill (three dots),
+   same blue as the outgoing bubble but a tighter 12px radius and no
+   max-width since it only ever wraps its own dots graphic. */
+.why-lumis__chat-typing {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1rem;           /* 14px / 16px */
+  border-radius: 0.75rem;           /* 12px */
+  background: var(--blue-dark);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* =============================================================
+   Narrow screens — one column; the photo strip's bleed and the
+   card's space-between rhythm both assume the shared-height grid
+   above, so both get simpler, safer fallbacks here.
+   ============================================================= */
+@media (max-width: 939px) {
+  .why-lumis__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .why-lumis__card {
+    justify-content: flex-start;
+    gap: 2rem;
+  }
+
+  .why-lumis__tones {
+    margin-inline: 0;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;        /* room for the scrollbar so it doesn't sit flush against the photos */
+  }
+}
