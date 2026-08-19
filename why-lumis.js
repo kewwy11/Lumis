@@ -338,3 +338,291 @@
     io.observe(carouselEl);
   }
 })();
+
+/* =============================================================
+   Why Lumis — Card 3 dermatologist chat loop
+   Plays SCRIPT as a chat thread, one self-perpetuating setTimeout
+   chain (playMessage → schedule → playMessage), rather than nested
+   callbacks or a fixed-tick interval — each message's own dwell time
+   depends on its text length, so a single interval can't drive it.
+
+   Each bubble is one DOM node for its whole life (never replaced):
+   it's created as a small typing pill (looping dots, sized via inline
+   style so it can transition), dwells, then grows in place to the
+   measured size of its full text — width/height/border-radius and the
+   text's own opacity/position are all animated via inline styles set
+   here, the same convention the map card above uses for its
+   JS-triggered transitions.
+
+   Bottom-anchored stack: new bubbles append at the bottom; already-
+   mounted ones are FLIPped (capture old position, let layout do its
+   thing, invert, then release into a transition) up to their new spot
+   so the reflow reads as one smooth push rather than a snap. Past 3
+   visible, the oldest gets an extra translateY(-24px)+fade on top of
+   that same shift and is unmounted once it's done.
+   ============================================================= */
+(function () {
+  var chatEl = document.getElementById('whyLumisChat');
+  if (!chatEl) return;
+
+  var SCRIPT = [
+    { speaker: 'patient', text: '“Hi Dr. Theresa, I’ve had these patches for months and they are beginning to itch.”' },
+    { speaker: 'derm', text: '“I can see the irritation around your cheeks. Let’s talk through what’s been happening.”' },
+    { speaker: 'patient', text: '“It has been there but just this Monday, it starts to really itch and is turning red.”' },
+    { speaker: 'derm', text: '“Try not to scratch it — I’ll put together a treatment plan for you shortly.”' }
+  ];
+
+  var MAX_VISIBLE = 3;
+  var ENTER_MS = 380;              // pill entrance: translateY(20px→0) scale(.94→1) opacity 0→1
+  var DOTS_FADE_MS = 120;          // typing dots fading out as the bubble starts growing
+  var GROW_MS = 320;               // pill → full-size box (width/height/border-radius)
+  var TEXT_FADE_DELAY_MS = 120;    // text fade-in starts partway into the grow…
+  var TEXT_FADE_MS = 200;          // …and finishes exactly as the grow does (120 + 200 = 320)
+  var HOLD_MS = 900;               // settled pause before the next message starts
+  var SHIFT_MS = 400;              // stack push-up + outgoing bubble's exit, same bouncy easing
+  var OUTGOING_TRANSLATE = -24;    // px, extra lift the aged-out bubble gets on top of the shift
+  var LOOP_HOLD_MS = 1500;         // pause after the last message before the whole thread resets
+  var LOOP_FADE_MS = 200;          // reset: each remaining bubble's own fade-out
+  var LOOP_STAGGER_MS = 60;        // reset: stagger between each bubble's fade, bottom-to-top
+  var BOUNCE_EASE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // One-time snapshot of the root font-size for sizing the pill in px —
+  // it's a small transient state each message passes through for a few
+  // hundred ms, so it doesn't need to track later responsive resizes.
+  var rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  var PILL_WIDTH = 4.875 * rootFontSize;   // 78px
+  var PILL_HEIGHT = 2.5 * rootFontSize;    // 40px
+
+  var listEl = document.createElement('div');
+  listEl.className = 'why-lumis__chat-list';
+  chatEl.appendChild(listEl);
+
+  var bubbles = [];   // mounted bubbles, oldest (topmost) first
+  var running = false;
+  var timer = null;
+
+  if (reducedMotion) {
+    renderStatic();
+  } else if ('IntersectionObserver' in window) {
+    observeVisibility();
+  } else {
+    start();
+  }
+
+  function clamp(min, val, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function renderStatic() {
+    SCRIPT.slice(0, 2).forEach(function (msg) {
+      var b = createBubble(msg);
+      listEl.appendChild(b.el);
+      b.dotsEl.style.display = 'none';
+      b.textEl.style.opacity = '1';
+      b.textEl.style.transform = 'none';
+    });
+  }
+
+  function createBubble(msg) {
+    var out = msg.speaker === 'patient';
+    var el = document.createElement('div');
+    el.className = 'why-lumis__chat-bubble why-lumis__chat-bubble--' + (out ? 'out' : 'in');
+
+    var dots = document.createElement('span');
+    dots.className = 'why-lumis__chat-dots';
+    dots.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 3; i++) {
+      dots.appendChild(document.createElement('span')).className = 'why-lumis__chat-dot';
+    }
+
+    var text = document.createElement('p');
+    text.className = 'why-lumis__chat-text';
+    text.textContent = msg.text;
+
+    el.appendChild(dots);
+    el.appendChild(text);
+    return { el: el, dotsEl: dots, textEl: text, msg: msg };
+  }
+
+  // Renders a message's full-size bubble off-screen to read its natural
+  // (wrapped, max-width-constrained) box size before animating the live
+  // bubble to it.
+  function measure(msg) {
+    var clone = createBubble(msg);
+    clone.el.classList.add('why-lumis__chat-measure');
+    clone.el.removeChild(clone.dotsEl);
+    clone.textEl.style.opacity = '1';
+    document.body.appendChild(clone.el);
+    var rect = clone.el.getBoundingClientRect();
+    document.body.removeChild(clone.el);
+    return { width: rect.width, height: rect.height };
+  }
+
+  function addMessage(msg) {
+    var b = createBubble(msg);
+    var existing = bubbles.slice();
+    var firstTops = existing.map(function (bb) { return bb.el.getBoundingClientRect().top; });
+
+    b.el.style.width = PILL_WIDTH + 'px';
+    b.el.style.height = PILL_HEIGHT + 'px';
+    b.el.style.borderRadius = '0.75rem';   // 12px, the pill's tighter radius — grown back to 15px in growBubble()
+    listEl.appendChild(b.el);
+    bubbles.push(b);
+
+    var overflow = bubbles.length > MAX_VISIBLE ? bubbles.shift() : null;
+
+    // Start state for this tick's animated elements, applied with
+    // transitions off so the browser doesn't tween the *jump* itself.
+    b.el.style.transition = 'none';
+    b.el.style.opacity = '0';
+    b.el.style.transform = 'translateY(1.25rem) scale(0.94)';   // 20px
+
+    existing.forEach(function (bb, i) {
+      if (bb === overflow) return;
+      var delta = firstTops[i] - bb.el.getBoundingClientRect().top;
+      bb.el.style.transition = 'none';
+      bb.el.style.transform = delta ? 'translateY(' + delta + 'px)' : '';
+    });
+
+    if (overflow) overflow.el.style.transition = 'none';
+
+    void listEl.offsetHeight; // force reflow so the instant start state above actually applies
+
+    requestAnimationFrame(function () {
+      b.el.style.transition = 'opacity ' + ENTER_MS + 'ms ' + BOUNCE_EASE + ', transform ' + ENTER_MS + 'ms ' + BOUNCE_EASE;
+      b.el.style.opacity = '1';
+      b.el.style.transform = 'translateY(0) scale(1)';
+
+      existing.forEach(function (bb) {
+        if (bb === overflow) return;
+        bb.el.style.transition = 'transform ' + SHIFT_MS + 'ms ' + BOUNCE_EASE;
+        bb.el.style.transform = 'translateY(0)';
+      });
+
+      if (overflow) {
+        overflow.el.style.transition = 'transform ' + SHIFT_MS + 'ms ' + BOUNCE_EASE + ', opacity ' + SHIFT_MS + 'ms ease';
+        overflow.el.style.transform = 'translateY(' + OUTGOING_TRANSLATE + 'px)';
+        overflow.el.style.opacity = '0';
+        setTimeout(function () {
+          if (overflow.el.parentNode) overflow.el.parentNode.removeChild(overflow.el);
+        }, SHIFT_MS);
+      }
+    });
+
+    return b;
+  }
+
+  function growBubble(b, cb) {
+    var target = measure(b.msg);
+
+    // Text gets its final wrapped width immediately (invisibly, still
+    // opacity 0) so it doesn't re-wrap live while the box grows around
+    // it — only the outer bubble's box animates.
+    b.textEl.style.width = target.width + 'px';
+
+    b.dotsEl.style.transition = 'opacity ' + DOTS_FADE_MS + 'ms ease';
+    b.dotsEl.style.opacity = '0';
+
+    b.el.style.transition =
+      'width ' + GROW_MS + 'ms ' + BOUNCE_EASE + ', ' +
+      'height ' + GROW_MS + 'ms ' + BOUNCE_EASE + ', ' +
+      'border-radius ' + GROW_MS + 'ms ease';
+    requestAnimationFrame(function () {
+      b.el.style.width = target.width + 'px';
+      b.el.style.height = target.height + 'px';
+      b.el.style.borderRadius = '0.9375rem';   // 15px
+    });
+
+    setTimeout(function () {
+      b.textEl.style.transition = 'opacity ' + TEXT_FADE_MS + 'ms ease, transform ' + TEXT_FADE_MS + 'ms ease';
+      b.textEl.style.opacity = '1';
+      b.textEl.style.transform = 'translateY(0)';
+    }, TEXT_FADE_DELAY_MS);
+
+    setTimeout(function () {
+      b.dotsEl.style.display = 'none';
+      // Settled: hand sizing back to the box's own natural (content +
+      // max-width) size instead of the measured snapshot, so it's not
+      // stuck at whatever width the viewport happened to be mid-grow.
+      b.el.style.width = '';
+      b.el.style.height = '';
+      b.el.style.borderRadius = '';
+      cb();
+    }, GROW_MS);
+  }
+
+  function playMessage(index) {
+    if (!running) return;
+    var msg = SCRIPT[index];
+    var b = addMessage(msg);
+
+    schedule(ENTER_MS, function () {
+      var dwell = clamp(900, msg.text.length * 22, 2200);
+      schedule(dwell, function () {
+        growBubble(b, function () {
+          if (!running) return;
+          var isLast = index === SCRIPT.length - 1;
+          if (isLast) {
+            schedule(LOOP_HOLD_MS, loopReset);
+          } else {
+            schedule(HOLD_MS, function () { playMessage(index + 1); });
+          }
+        });
+      });
+    });
+  }
+
+  function loopReset() {
+    if (!running) return;
+    var current = bubbles.slice();
+    var n = current.length;
+    current.forEach(function (b, i) {
+      var delay = (n - 1 - i) * LOOP_STAGGER_MS;   // bottom (last) bubble fades first
+      setTimeout(function () {
+        b.el.style.transition = 'opacity ' + LOOP_FADE_MS + 'ms ease';
+        b.el.style.opacity = '0';
+      }, delay);
+    });
+    schedule(LOOP_FADE_MS + (n - 1) * LOOP_STAGGER_MS, function () {
+      resetAll();
+      playMessage(0);
+    });
+  }
+
+  function schedule(ms, fn) {
+    timer = setTimeout(function () {
+      timer = null;
+      fn();
+    }, ms);
+  }
+
+  function resetAll() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    listEl.innerHTML = '';
+    bubbles = [];
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resetAll();
+    playMessage(0);
+  }
+
+  function stop() {
+    running = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function observeVisibility() {
+    if (reducedMotion) return; // frozen on the first two messages — never starts
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+    }, { threshold: 0.2 });
+    io.observe(chatEl);
+  }
+})();

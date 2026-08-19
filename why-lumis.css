@@ -475,23 +475,47 @@
   .why-lumis__carousel-caption { transition: none; }
 }
 
-/* ---------- Card 3: dermatologist chat ---------- */
+/* ---------- Card 3: dermatologist chat loop ----------
+   why-lumis.js drives an ordered SCRIPT of { speaker, text } through a
+   single self-perpetuating setTimeout chain (see playMessage there).
+   Each bubble is one DOM node for its whole life: it enters as a small
+   typing pill (dots looping), dwells, then *transforms in place* into
+   its full text bubble — width/height/border-radius animated via
+   JS-set inline styles (measured from a hidden clone) rather than CSS
+   classes, matching the map card's convention for JS-driven transitions.
+
+   .why-lumis__chat is the fixed-size viewport (286px — the tallest
+   Figma state for this component, node 2144:28114 "Frame 1033": three
+   full bubbles plus the next typing pill peeking in) with its top ~40px
+   masked to transparent, so bubbles read as sliding up out of view
+   rather than being clipped. .why-lumis__chat-list is the actual
+   bottom-anchored column inside it; new bubbles append at the bottom
+   and the JS FLIPs the rest upward to make room, unmounting whichever
+   bubble ages out past the 3-visible cap. */
 .why-lumis__chat {
+  position: relative;
   width: 100%;
+  height: 17.875rem;                /* 286px */
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 2.5rem);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 2.5rem);
+}
+
+.why-lumis__chat-list {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 1.125rem;                    /* 18px */
 }
 
 .why-lumis__chat-bubble {
+  position: relative;
+  flex-shrink: 0;
   margin: 0;
   max-width: 19.8125rem;            /* 317px */
-  padding: 0.875rem 1rem;           /* 14px / 16px */
-  border-radius: 0.9375rem;         /* 15px */
-  font-family: var(--font);
-  font-weight: 300;
-  font-size: 0.75rem;               /* 12px */
-  line-height: 1.125rem;            /* 18px */
+  border-radius: 0.9375rem;         /* 15px — full-bubble default (also what the noscript/reduced-motion fallbacks render); why-lumis.js starts a fresh live bubble at 12px itself and grows it back to this */
 }
 
 .why-lumis__chat-bubble--out {
@@ -508,18 +532,65 @@
   box-shadow: 0 4px 10px rgba(110, 110, 110, 0.1);
 }
 
-/* Third "message" in the thread — a typing-indicator pill (three dots),
-   same blue as the outgoing bubble but a tighter 12px radius and no
-   max-width since it only ever wraps its own dots graphic. */
-.why-lumis__chat-typing {
-  align-self: flex-start;
+/* The three-dot typing graphic, absolutely centred over the bubble so it
+   can share the same box the text will grow into. currentColor picks up
+   each variant's own text colour above, so the dots read light on the
+   blue "out" pill and dark on the white "in" pill without a separate rule. */
+.why-lumis__chat-dots {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.3125rem;                   /* 5px */
+}
+
+.why-lumis__chat-dot {
+  width: 0.75rem;                   /* 12px */
+  height: 0.75rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: why-lumis-chat-dot 1.4s ease-in-out infinite;
+}
+
+.why-lumis__chat-dot:nth-child(2) { animation-delay: 0.16s; }
+.why-lumis__chat-dot:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes why-lumis-chat-dot {
+  0%, 60%, 100% { transform: translateY(0);      opacity: 0.5; }
+  30%           { transform: translateY(-0.1875rem); opacity: 1; }   /* -3px */
+}
+
+/* The message text — carries the bubble's real padding (the bubble
+   itself has none) so growBubble() can size it to the same box the
+   outer bubble animates to. Starts hidden/offset; why-lumis.js fades
+   and lifts it in once the bubble has grown to fit it. */
+.why-lumis__chat-text {
+  margin: 0;
   padding: 0.875rem 1rem;           /* 14px / 16px */
-  border-radius: 0.75rem;           /* 12px */
-  background: var(--blue-dark);
-  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  font-family: var(--font);
+  font-weight: 300;
+  font-size: 0.75rem;               /* 12px */
+  line-height: 1.125rem;            /* 18px */
+  opacity: 0;
+  transform: translateY(0.25rem);   /* 4px */
+}
+
+/* Used only to measure a message's full-size box off-screen before
+   animating the live bubble to that size — see measure() in
+   why-lumis.js. Absolute + only `left` set gives it the same
+   shrink-to-fit width the real (flex, align-self) bubble gets. */
+.why-lumis__chat-measure {
+  position: absolute;
+  left: -62.5rem;                   /* -1000px, off-screen */
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-lumis__chat-dot { animation: none; opacity: 0.5; }
 }
 
 /* =============================================================
