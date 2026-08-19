@@ -96,16 +96,30 @@ body {
   transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-/* Screen2 (hero2) is open: fade this whole screen (nav included — hero1's
-   navbar does not carry into hero2, which has its own) out from underneath
-   it, same moment screen2 starts opening, then drop it from hit-testing/
-   tab order once fully invisible (the 300ms visibility delay). Closing
-   removes this class, so the base rule above (no visibility delay) fades
-   it back in and makes it interactive again immediately. */
+/* hero1 and hero2 (.screen2, right below this in the DOM) are two states
+   of the same "hero slot" at the top of the page, never both occupying
+   scroll space at once — opening hero2 collapses this one out from
+   underneath it, closing hero2 brings this back. Fades out first (300ms,
+   this rule's own always-on opacity transition above still applies), then
+   collapses to 0 height once invisible — the delayed `height` entry below
+   is what makes that "after," not simultaneous, so the fade is actually
+   visible rather than getting clipped away mid-fade. Reappearing (the
+   class removed) is immediate on every property — the base rule above
+   declares no transition for height/visibility, only opacity — so hero1
+   springs back to its full height right away while its opacity fades back
+   in over that already-full space, mirroring how .screen2.is-open itself
+   opens (see below). Toggled alongside .screen2.is-open in script.js's
+   open()/close(). */
 .stage.is-behind-screen2 {
+  height: 0;
+  padding: 0;   /* a border-box element can't shrink past its own padding — both the base rule's and the wide-layout query's .stage padding would otherwise hold this open even at height:0 */
+  overflow: hidden;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 300ms;
+  pointer-events: none;
+  transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1),
+              visibility 0s 300ms,
+              height 0s linear 300ms;
 }
 
 /* ---------- Masthead ---------- */
@@ -585,39 +599,65 @@ body {
 /* New outer wrapper — .hero2 and everything inside it (the precise
    1512x982 stage, markers, image) is untouched; this just adds the
    screen-transition surface around it. Always rendered (no display:none)
-   so opacity/transform can actually animate; closed state is invisible
-   and inert via opacity + pointer-events instead. */
+   so opacity/transform can actually animate; closed state is invisible,
+   inert (opacity + pointer-events) and collapsed to 0 height — in-flow,
+   not position:fixed, so the page scrolls freely in either hero state.
+   Sits right after .stage in the DOM: the two are a matched pair, each
+   the full "hero section" for its own state, one always collapsed while
+   the other is full height — see .stage.is-behind-screen2 above, toggled
+   alongside this in script.js's open()/close(). Never both take up space
+   at once, so the page reads as hero (whichever one) → Partners → About →
+   Why Lumis, not hero1 → hero2 → Partners → ....
+
+   Height is deliberately NOT in the same transition timing both ways:
+   opening needs the box at its full 100vh *immediately* (closeButton's
+   focus depends on the real layout being there right away), so .is-open's
+   own transition gives height 0s/no delay. Closing needs the opposite —
+   the box must stay full height until the opacity/transform fade-out is
+   actually done playing, or the still-fading-out content would get
+   clipped away mid-fade — so the base (closed) rule's transition delays
+   the height collapse by the full --screen2-duration. Same trick as
+   .stage.is-behind-screen2 above: an asymmetric transition-delay
+   depending on which rule is "arriving". */
 .screen2 {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
+  height: 0;
   overflow: hidden;
   opacity: 0;
   transform: scale(1.04);   /* closed: slightly over 1, so opening only ever scales DOWN into place */
   pointer-events: none;
   transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
-              transform var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1);
+              transform var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+              height 0s linear var(--screen2-duration, 600ms);
 }
 
 .screen2.is-open {
+  height: 100vh;
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
+  transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+              transform var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+              height 0s linear 0s;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .screen2 {
     transform: none;              /* opacity only — no scale */
-    transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1);
+    transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+                height 0s linear var(--screen2-duration, 600ms);
   }
-  .screen2.is-open { transform: none; }
+  .screen2.is-open {
+    transform: none;
+    transition: opacity var(--screen2-duration, 600ms) cubic-bezier(0.32, 0.72, 0, 1),
+                height 0s linear 0s;
+  }
 }
 
 .hero2 {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  overflow: hidden;   /* nothing ever scrolls — the wide layout scales to fit instead */
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;   /* clips the 1512x982 stage to whatever height .screen2 currently has */
   background: var(--header);
 }
 

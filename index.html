@@ -302,6 +302,133 @@
 
   </div>
 
+  <!-- Second hero state: a full-screen expansion of whichever portrait was
+       clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662).
+       .screen2 owns the open/close screen transition (opacity+scale+height);
+       .hero2 and everything inside it is untouched by that — always
+       rendered, never display:none, so the transition can actually animate.
+       In-flow (not position:fixed) so scrolling works whether it's open or
+       closed: collapsed to 0 height until a portrait is clicked, then it
+       takes up a full viewport height right here, between hero1 and the
+       Partners strip — scrolling past it keeps going into the rest of the
+       page instead of being trapped. -->
+  <div class="screen2" id="screen2" aria-hidden="true">
+  <section class="hero2" id="hero2">
+    <!-- Image + face-annotation markers share one coordinate space: a
+         1512x982-proportioned stage that always covers the viewport
+         (aspect-ratio + width:max(100vw, 100svh*ratio)), clipped by
+         .hero2's overflow:hidden. Markers are positioned in % of this
+         stage, so they never drift from the photo underneath, at any
+         screen size. -->
+    <div class="hero2__stage" id="hero2Stage">
+      <!-- Wrapper exists only so a skin switch can crossfade/scale the
+           photo without touching hero2__bg's own cover-fit crop math
+           (script.js's applyBgGeometry, keyed to this element's box). -->
+      <div class="hero2__bg-frame" id="hero2BgFrame">
+        <img class="hero2__bg" id="hero2Bg" src="" alt="">
+      </div>
+      <span class="hero2__scan-line" id="hero2ScanLine" aria-hidden="true"></span>
+
+      <div class="hero2__marker" id="hero2Marker0">
+        <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker1">
+        <span class="hero2__marker-label" id="hero2MarkerLabel1"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+      <div class="hero2__marker" id="hero2Marker2">
+        <span class="hero2__marker-label" id="hero2MarkerLabel2"></span>
+        <span class="hero2__marker-line" aria-hidden="true"></span>
+        <span class="hero2__marker-ring" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="hero2__scrim" aria-hidden="true"></div>
+
+    <div class="hero2__frame">
+      <header class="hero2__nav">
+        <button class="hero2__logo" type="button" id="hero2Logo" aria-label="Back to home">
+          <img src="icons/lumislogo-white.svg" alt="Lumis" width="99" height="24">
+        </button>
+        <button class="hero2__close" type="button" id="hero2Close" aria-label="Close analysis view">
+          <span class="hero2__close-bars" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <a class="hero2__cta" href="#">
+        <span class="button__label">
+          <span class="button__label-track">
+            <span class="button__label-text">Get started</span>
+            <span class="button__label-text" aria-hidden="true">Get started</span>
+          </span>
+        </span>
+      </a>
+
+      <!-- One bar per portrait, same reading order as PORTRAITS in
+           script.js (top-left, top-right, left, right, bottom-left,
+           bottom-right) — switchPerson() keys off that same order. -->
+      <div class="hero2__severity" id="hero2Severity">
+        <button type="button" class="hero2__severity-bar" data-position="top-left" aria-label="View Deborah Clark's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="top-right" aria-label="View Marcuss Webb's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="left" aria-label="View Aisha Bello's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="right" aria-label="View Naledi Okafor's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="bottom-left" aria-label="View Simone Tanya's analysis"></button>
+        <button type="button" class="hero2__severity-bar" data-position="bottom-right" aria-label="View Mei Tanaka's analysis"></button>
+      </div>
+
+      <div class="hero2__footer">
+        <div class="hero2__dropdown" id="hero2NameDropdown">
+          <button class="hero2__pill hero2__pill--dropdown" id="hero2NamePill" type="button" aria-expanded="false" aria-controls="hero2NamePanel">
+            <span id="hero2Name"></span>
+            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
+          </button>
+          <div class="hero2__name-panel" id="hero2NamePanel" hidden>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Age</p>
+              <p class="hero2__name-value" id="hero2Age"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Dominant Condition</p>
+              <p class="hero2__name-value" id="hero2Dominant"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Confidence</p>
+              <p class="hero2__name-value" id="hero2Confidence"></p>
+            </div>
+            <div class="hero2__name-row">
+              <p class="hero2__name-label">Other Conditions</p>
+              <p class="hero2__name-value" id="hero2Other"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero2__dropdown" id="hero2SkinDropdown">
+          <button class="hero2__pill hero2__pill--dropdown" id="hero2SkinTypePill" type="button" aria-expanded="false" aria-controls="hero2SkinPanel">
+            <span id="hero2SkinType"></span>
+            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
+          </button>
+          <ul class="hero2__skin-panel" id="hero2SkinPanel" hidden>
+            <li><button type="button" data-value="Olive skin">Olive skin</button></li>
+            <li><button type="button" data-value="Deep brown skin">Deep brown skin</button></li>
+            <li><button type="button" data-value="Milky white skin">Milky white skin</button></li>
+            <li><button type="button" data-value="Bronze skin">Bronze skin</button></li>
+            <li><button type="button" data-value="Dark Skin">Dark Skin</button></li>
+            <li><button type="button" data-value="Black Skin">Black Skin</button></li>
+          </ul>
+        </div>
+
+        <p class="hero2__stat" id="hero2Stat">
+          <span class="hero2__stat-name" id="hero2StatName"></span>
+          <span class="hero2__stat-value" id="hero2StatValue"></span>
+        </p>
+      </div>
+    </div>
+  </section>
+  </div>
+
   <!-- Partners strip: a continuous, edge-fading horizontal scroll of logos —
        "entering and coming out of a portal." Pure CSS (no JS): two identical
        logo tracks side by side, animated left as one unit by exactly one
@@ -457,128 +584,6 @@
       </article>
     </div>
   </section>
-
-  <!-- Second hero state: a full-screen expansion of whichever portrait was
-       clicked, opened/populated by script.js. Figma "hero2" (node 2144:11662).
-       .screen2 owns the open/close screen transition (opacity+scale); .hero2
-       and everything inside it is untouched by that — always rendered, never
-       display:none, so the transition can actually animate. -->
-  <div class="screen2" id="screen2" aria-hidden="true">
-  <section class="hero2" id="hero2">
-    <!-- Image + face-annotation markers share one coordinate space: a
-         1512x982-proportioned stage that always covers the viewport
-         (aspect-ratio + width:max(100vw, 100svh*ratio)), clipped by
-         .hero2's overflow:hidden. Markers are positioned in % of this
-         stage, so they never drift from the photo underneath, at any
-         screen size. -->
-    <div class="hero2__stage" id="hero2Stage">
-      <!-- Wrapper exists only so a skin switch can crossfade/scale the
-           photo without touching hero2__bg's own cover-fit crop math
-           (script.js's applyBgGeometry, keyed to this element's box). -->
-      <div class="hero2__bg-frame" id="hero2BgFrame">
-        <img class="hero2__bg" id="hero2Bg" src="" alt="">
-      </div>
-      <span class="hero2__scan-line" id="hero2ScanLine" aria-hidden="true"></span>
-
-      <div class="hero2__marker" id="hero2Marker0">
-        <span class="hero2__marker-label" id="hero2MarkerLabel0"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
-      </div>
-      <div class="hero2__marker" id="hero2Marker1">
-        <span class="hero2__marker-label" id="hero2MarkerLabel1"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
-      </div>
-      <div class="hero2__marker" id="hero2Marker2">
-        <span class="hero2__marker-label" id="hero2MarkerLabel2"></span>
-        <span class="hero2__marker-line" aria-hidden="true"></span>
-        <span class="hero2__marker-ring" aria-hidden="true"></span>
-      </div>
-    </div>
-
-    <div class="hero2__scrim" aria-hidden="true"></div>
-
-    <div class="hero2__frame">
-      <header class="hero2__nav">
-        <button class="hero2__logo" type="button" id="hero2Logo" aria-label="Back to home">
-          <img src="icons/lumislogo-white.svg" alt="Lumis" width="99" height="24">
-        </button>
-        <button class="hero2__close" type="button" id="hero2Close" aria-label="Close analysis view">
-          <span class="hero2__close-bars" aria-hidden="true"></span>
-        </button>
-      </header>
-
-      <a class="hero2__cta" href="#">
-        <span class="button__label">
-          <span class="button__label-track">
-            <span class="button__label-text">Get started</span>
-            <span class="button__label-text" aria-hidden="true">Get started</span>
-          </span>
-        </span>
-      </a>
-
-      <!-- One bar per portrait, same reading order as PORTRAITS in
-           script.js (top-left, top-right, left, right, bottom-left,
-           bottom-right) — switchPerson() keys off that same order. -->
-      <div class="hero2__severity" id="hero2Severity">
-        <button type="button" class="hero2__severity-bar" data-position="top-left" aria-label="View Deborah Clark's analysis"></button>
-        <button type="button" class="hero2__severity-bar" data-position="top-right" aria-label="View Marcuss Webb's analysis"></button>
-        <button type="button" class="hero2__severity-bar" data-position="left" aria-label="View Aisha Bello's analysis"></button>
-        <button type="button" class="hero2__severity-bar" data-position="right" aria-label="View Naledi Okafor's analysis"></button>
-        <button type="button" class="hero2__severity-bar" data-position="bottom-left" aria-label="View Simone Tanya's analysis"></button>
-        <button type="button" class="hero2__severity-bar" data-position="bottom-right" aria-label="View Mei Tanaka's analysis"></button>
-      </div>
-
-      <div class="hero2__footer">
-        <div class="hero2__dropdown" id="hero2NameDropdown">
-          <button class="hero2__pill hero2__pill--dropdown" id="hero2NamePill" type="button" aria-expanded="false" aria-controls="hero2NamePanel">
-            <span id="hero2Name"></span>
-            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
-          </button>
-          <div class="hero2__name-panel" id="hero2NamePanel" hidden>
-            <div class="hero2__name-row">
-              <p class="hero2__name-label">Age</p>
-              <p class="hero2__name-value" id="hero2Age"></p>
-            </div>
-            <div class="hero2__name-row">
-              <p class="hero2__name-label">Dominant Condition</p>
-              <p class="hero2__name-value" id="hero2Dominant"></p>
-            </div>
-            <div class="hero2__name-row">
-              <p class="hero2__name-label">Confidence</p>
-              <p class="hero2__name-value" id="hero2Confidence"></p>
-            </div>
-            <div class="hero2__name-row">
-              <p class="hero2__name-label">Other Conditions</p>
-              <p class="hero2__name-value" id="hero2Other"></p>
-            </div>
-          </div>
-        </div>
-
-        <div class="hero2__dropdown" id="hero2SkinDropdown">
-          <button class="hero2__pill hero2__pill--dropdown" id="hero2SkinTypePill" type="button" aria-expanded="false" aria-controls="hero2SkinPanel">
-            <span id="hero2SkinType"></span>
-            <span class="hero2__chevron"><img src="icons/chevron-up.svg" alt="" width="24" height="24"></span>
-          </button>
-          <ul class="hero2__skin-panel" id="hero2SkinPanel" hidden>
-            <li><button type="button" data-value="Olive skin">Olive skin</button></li>
-            <li><button type="button" data-value="Deep brown skin">Deep brown skin</button></li>
-            <li><button type="button" data-value="Milky white skin">Milky white skin</button></li>
-            <li><button type="button" data-value="Bronze skin">Bronze skin</button></li>
-            <li><button type="button" data-value="Dark Skin">Dark Skin</button></li>
-            <li><button type="button" data-value="Black Skin">Black Skin</button></li>
-          </ul>
-        </div>
-
-        <p class="hero2__stat" id="hero2Stat">
-          <span class="hero2__stat-name" id="hero2StatName"></span>
-          <span class="hero2__stat-value" id="hero2StatValue"></span>
-        </p>
-      </div>
-    </div>
-  </section>
-  </div>
 
   <script src="script.js"></script>
   <script src="about.js"></script>

@@ -795,12 +795,14 @@
   });
 
   // ---------- Screen transition ----------
-  // .screen2 (wrapping .hero2, untouched) fades/scales in from 1.04, .stage
-  // (screen1 — hero1's own navbar included, it does not carry into hero2)
-  // fades out under it on the same beat — one curve, both starting at the
-  // same moment, reversed exactly on close. See style.css for the class
-  // definitions; this just toggles them and drives what CSS can't (the
-  // open/close duration split, and restoring scroll position).
+  // hero1 (.stage) and hero2 (.screen2, wrapping .hero2 untouched) are two
+  // states of the same hero slot — never both taking up scroll space at
+  // once. Opening fades+collapses .stage out while .screen2 fades/scales/
+  // grows in to take its place; closing reverses it. Both are in-flow (not
+  // position:fixed), so the rest of the page stays scrollable throughout.
+  // See style.css for the class definitions (.stage.is-behind-screen2,
+  // .screen2.is-open); this just toggles them and drives what CSS can't
+  // (the open/close duration split, and scrolling to/from the hero slot).
   const screen2 = document.getElementById("screen2");
   const stage = document.querySelector(".stage");
   const OPEN_MS = 600;
@@ -895,8 +897,12 @@
     screen2.setAttribute("aria-hidden", "false");
     screen2.classList.add("is-open");
     stage.classList.add("is-behind-screen2");
-    document.body.style.overflow = "hidden";
-    closeButton.focus();
+    // hero1 might itself have been scrolled (its portrait ring can be
+    // taller than the viewport) — reset to the top of the shared hero slot
+    // so hero2 always opens showing its own top, not wherever hero1 had
+    // scrolled to.
+    window.scrollTo(0, 0);
+    closeButton.focus({ preventScroll: true }); // the scrollTo above is the single source of truth for scroll position — an unguarded focus() would also auto-scroll and could fight it
 
     clearTimeout(iconTimer);
     iconTimer = setTimeout(() => {
@@ -910,8 +916,7 @@
     screen2.style.setProperty("--screen2-duration", `${CLOSE_MS}ms`);
     screen2.classList.remove("is-open");
     screen2.setAttribute("aria-hidden", "true");
-    stage.classList.remove("is-behind-screen2");
-    document.body.style.overflow = "";
+    stage.classList.remove("is-behind-screen2"); // hero1 springs back to full height immediately (style.css), so it's already back in place at this point
     window.scrollTo(0, savedScrollY);
     isOpen = false;
     document.dispatchEvent(new CustomEvent("lumis:analysis-closed"));
