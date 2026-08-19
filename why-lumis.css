@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.5rem;                    /* 40px, badge+heading group to the card grid */
+  gap: 3rem;                      /* 48px, badge+heading group to the card grid */
 }
 
 .why-lumis__intro {
@@ -31,6 +31,15 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;                      /* 16px, matches the badge-to-heading rhythm used elsewhere */
+}
+
+/* .chip is 0.875rem (14px) everywhere, but below the site's 1512px
+   design width the root font-size scales down with it (see the
+   html{font-size:clamp(...)} rule in style.css), so this badge can
+   render under 14px on narrower windows. Fixed to a true 14px here so
+   this particular pill holds its size regardless of viewport. */
+.why-lumis__intro .chip {
+  font-size: 14px;
 }
 
 .why-lumis__heading {
